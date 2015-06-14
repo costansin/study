@@ -1,0 +1,15 @@
+http://developer.android.com/reference/android/location/LocationManager.html
+http://startandroid.ru/ru/uroki/vse-uroki-spiskom/291-urok-138-opredelenie-mestopolozhenija-gps-koordinaty.html
+http://developer.android.com/reference/android/location/Geocoder.html
+http://developer.android.com/guide/topics/location/strategies.html
+http://stackoverflow.com/questions/5028830/get-current-location-address-for-android-app
+http://developer.android.com/reference/android/hardware/Camera.Parameters.html#setGpsLatitude%28double%29
+
+e-mail:
+http://stackoverflow.com/questions/2020088/sending-email-in-android-using-javamail-api-without-using-the-default-built-in-a/2033124#2033124
+
+опендиалог:
+https://code.google.com/p/android-file-dialog/ - как скачать: http://stackoverflow.com/questions/1900786/how-to-download-checkout-a-project-from-google-code-in-windows
+http://stackoverflow.com/questions/7856959/android-file-chooser - to GiHub
+http://stackoverflow.com/questions/3592717/choose-file-dialog - original solution
+http://habrahabr.ru/post/203884/

@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">AntiAntiPlagiat 2.0</string>
+
+    <string name="hello_world">Заполните, пожалуйста, форму.</string>
+    <string name="inputName">Введите имя</string>
+    <string name="inputTelephone">Введите телефон</string>
+    <string name="attach">Прикрепить документ в формате MS Word</string>
+    <string name="attachbtn">Прикрепить</string>
+    <string name="sendbtn">Отправить</string>
+</resources>

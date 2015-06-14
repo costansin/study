@@ -1,0 +1,16 @@
+{
+    "name":"Vk Like Sort",
+    "version":"0.3",
+    "manifest_version": 2, 
+    "description":"Sorting posts of a wall at vk.com depending on quantity of likes",
+    "content_scripts":[
+        {
+            "matches":["http://vk.com/*"],
+            "js":["jquery-1.11.2.min.js", "script.js"]
+        }
+    ],
+	"options_page": "options.html",
+	"permissions": [
+		"storage"
+	]
+}

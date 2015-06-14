@@ -1,0 +1,1 @@
+The program on wolfram mathematica finds the period of the continued fraction of a quadratic irrational number (before that it finds whether it is a quadratic irrational number) in the most optimal way.

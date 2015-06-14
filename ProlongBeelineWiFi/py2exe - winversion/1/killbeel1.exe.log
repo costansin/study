@@ -1,0 +1,710 @@
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10054] >
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10053] ѕрограмма на вашем хост->
+Traceback (most recent call last):
+  File "killbeel1.py", line 3, in <module>
+    x=urllib2.urlopen('http://cp.beelinewifi.ru/v/?lang=ru&url=aHR0cDovL2dvb2dsZS5ydS8%3D&id=1').read()
+  File "socket.pyc", line 348, in read
+  File "httplib.pyc", line 522, in read
+  File "httplib.pyc", line 580, in _read_chunked
+  File "httplib.pyc", line 619, in _safe_read
+  File "socket.pyc", line 377, in read
+socket.error: [Errno 10053] ѕрограмма на вашем хост-
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 4, in <module>
+    urllib2.urlopen('http://cp.beelinewifi.ru/d/internal/?'+x[(x.find('url')+20):(x.find("WiFi'")+4)])
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 429, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 605, in http_error_302
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10054] >
+Traceback (most recent call last):
+  File "killbeel1.py", line 4, in <module>
+    urllib2.urlopen('http://cp.beelinewifi.ru/d/internal/?'+x[(x.find('url')+20):(x.find("WiFi'")+4)])
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10054] >
+Traceback (most recent call last):
+  File "killbeel1.py", line 4, in <module>
+    urllib2.urlopen('http://cp.beelinewifi.ru/d/internal/?'+x[(x.find('url')+20):(x.find("WiFi'")+4)])
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 429, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 605, in http_error_302
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 429, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 605, in http_error_302
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10054] >
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10060] ѕопытка установить соединение была безуспешной, т.к. от другого компьютера за требуемое врем€ не получен нужный отклик, или было разорвано уже установленное соединение из->
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 4, in <module>
+    urllib2.urlopen('http://cp.beelinewifi.ru/d/internal/?'+x[(x.find('url')+20):(x.find("WiFi'")+4)])
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 429, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 605, in http_error_302
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 429, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 605, in http_error_302
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10053] ѕрограмма на вашем хост->
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 435, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 518, in http_error_default
+urllib2.HTTPError: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 4, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10060] ѕопытка установить соединение была безуспешной, т.к. от другого компьютера за требуемое врем€ не получен нужный отклик, или было разорвано уже установленное соединение из->
+Traceback (most recent call last):
+  File "killbeel1.py", line 4, in <module>
+    urllib2.urlopen('http://cp.beelinewifi.ru/d/internal/?'+x[(x.find('url')+20):(x.find("WiFi'")+4)])
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 429, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 605, in http_error_302
+  File "urllib2.pyc", line 397, in open
+  File "urllib2.pyc", line 510, in http_response
+  File "urllib2.pyc", line 429, in error
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 605, in http_error_302
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10054] >
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+    urllib2.urlopen('http://startwifi.beeline.ru/status?logout=1')
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10060] ѕопытка установить соединение была безуспешной, т.к. от другого компьютера за требуемое врем€ не получен нужный отклик, или было разорвано уже установленное соединение из->
+Traceback (most recent call last):
+Traceback (most recent call last):
+odule>
+  File "socket.pyc", line 348, in read
+  File "killbeel1.py", line 4, in <module>
+  File "httplib.pyc", line 522, in read
+  File "httplib.pyc", line 580, in _read_chunked
+  File "httplib.pyc", line 619, in _safe_read
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "socket.pyc", line 377, in read
+  File "urllib2.pyc", line 1145, in do_open
+socketurllib2..errorURLError: : <urlopen error [Errno 10053] ѕрограмма на вашем хост->
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 11004] getaddrinfo failed>
+Traceback (most recent call last):
+  File "killbeel1.py", line 2, in <module>
+  File "urllib2.pyc", line 126, in urlopen
+  File "urllib2.pyc", line 391, in open
+  File "urllib2.pyc", line 409, in _open
+  File "urllib2.pyc", line 369, in _call_chain
+  File "urllib2.pyc", line 1170, in http_open
+  File "urllib2.pyc", line 1145, in do_open
+urllib2.URLError: <urlopen error [Errno 10060] ѕопытка установить соединение была безуспешной, т.к. от другого компьютера за требуемое врем€ не получен нужный отклик, или было разорвано уже установленное соединение из->
