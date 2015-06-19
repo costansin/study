@@ -906,7 +906,7 @@ begin
 
   BitBtn2Click(MF);
   inpooot;
-  f.LoadFromFile('1145254649w677.bmp');
+  f.LoadFromFile('default.bmp');
   e.Canvas.Draw(0,0,f);
   e.Refresh;
 end;
