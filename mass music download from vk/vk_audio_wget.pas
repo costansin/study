@@ -7,8 +7,9 @@ var a,b,c,d: text;
     l: string;
   end;
   v,u,dir: string;
-  i,j,n: integer;
+  i,j,n,k: Longint;
 begin
+  k:=2409237;
   assign(a,'vkopt');
   assign(b,'names');
   assign(c,'bashy.sh');
@@ -20,7 +21,7 @@ begin
   i:=0;
   Writeln(c,'mkdir out');
   dir:='out';
-  Readln(b); Readln(b);
+  //Readln(b); Readln(b);
   while not eof(a) do
   begin
     u:='wget -nc ';//Write(c,'wget -nc ');
@@ -54,8 +55,8 @@ begin
       end;
     //dir:=copy(s[i].s,1,n-2);
     //Writeln(c,'mkdir ',dir);
-    Writeln(c,u,dir,'/',v,'.mp3');
-    Readln(b); Readln(b,s[i].l); Readln(b);
+    Writeln(c,u,dir,'/',k,'-',v,'.mp3');inc(k);
+    Readln(b); Readln(b,s[i].l); //Readln(b);
   end;
   n:=i;
   Writeln(d,n);

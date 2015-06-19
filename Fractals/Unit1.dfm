@@ -1148,7 +1148,7 @@ object MF: TMF
   end
   object Transformchx: TCheckBox
     Left = 863
-    Top = 583
+    Top = 581
     Width = 96
     Height = 18
     Anchors = [akTop, akRight]
@@ -1213,28 +1213,19 @@ object MF: TMF
     Width = 75
     Height = 25
     Anchors = [akTop, akRight]
-    Caption = 'Cardioid'
+    Caption = 'Cardioid ->'
     TabOrder = 79
     OnClick = CardioidBtnClick
   end
   object Answer: TBitBtn
-    Left = 1045
-    Top = 416
+    Left = 997
+    Top = 472
     Width = 44
-    Height = 27
+    Height = 19
     Anchors = [akTop, akRight]
     Caption = 'Answer'
     TabOrder = 80
     OnClick = AnswerClick
-  end
-  object DragonBtn: TButton
-    Left = 964
-    Top = 390
-    Width = 45
-    Height = 27
-    Anchors = [akTop, akRight]
-    Caption = 'Dragon'
-    TabOrder = 81
   end
   object RandomQBtn: TBitBtn
     Left = 857
@@ -1243,7 +1234,7 @@ object MF: TMF
     Height = 25
     Anchors = [akTop, akRight]
     Caption = 'gen rnd qlr'
-    TabOrder = 82
+    TabOrder = 81
     Visible = False
     OnClick = RandomQBtnClick
   end
@@ -1255,7 +1246,7 @@ object MF: TMF
     Caption = 'Normalize'
     Checked = True
     State = cbChecked
-    TabOrder = 83
+    TabOrder = 82
     Visible = False
   end
   object OvernormalizeChx: TCheckBox
@@ -1272,28 +1263,37 @@ object MF: TMF
     Font.Style = []
     ParentFont = False
     State = cbChecked
-    TabOrder = 84
+    TabOrder = 83
     Visible = False
   end
   object ScrollBar1: TScrollBar
-    Left = 857
-    Top = 408
+    Left = 1145
+    Top = 520
     Width = 16
     Height = 105
     Anchors = [akTop, akRight]
     Kind = sbVertical
     Max = 10
     PageSize = 0
-    TabOrder = 85
+    TabOrder = 84
   end
   object inversechx: TCheckBox
-    Left = 998
-    Top = 464
+    Left = 1054
+    Top = 424
     Width = 41
     Height = 25
     Anchors = [akTop, akRight]
     Caption = 'inv'
+    TabOrder = 85
+  end
+  object invedt: TEdit
+    Left = 1099
+    Top = 425
+    Width = 58
+    Height = 21
+    Anchors = [akTop, akRight]
     TabOrder = 86
+    Text = '0,5'
   end
   object OpenDial: TOpenDialog
     Left = 808

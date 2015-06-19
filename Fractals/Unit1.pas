@@ -129,12 +129,12 @@ type
     Japanchx: TCheckBox;
     CardioidBtn: TBitBtn;
     Answer: TBitBtn;
-    DragonBtn: TButton;
     RandomQBtn: TBitBtn;
     NormalizeChx: TCheckBox;
     OvernormalizeChx: TCheckBox;
     ScrollBar1: TScrollBar;
     inversechx: TCheckBox;
+    invedt: TEdit;
     procedure savetohistory(ttr: char);
     procedure OldImport(s: TFileName);
     procedure inpooot;
@@ -178,6 +178,7 @@ type
     procedure CardioidBtnClick(Sender: TObject);
     procedure AnswerClick(Sender: TObject);
     procedure RandomQBtnClick(Sender: TObject);
+    procedure DragonBtnClick(Sender: TObject);
   end;
 
 type
@@ -191,7 +192,7 @@ var
   f: TBitmap;
   xx,yy,xxx,yyy,w,h,black,start_of_draw: Integer;
   cbb:integer;//string;
-  ee1,ee2,ee3,ee4,ee7,ee8,et1,et2,et3,et4,inf,stocheps: Double;
+  ee1,ee2,ee3,ee4,ee7,ee8,et1,et2,et3,et4,inf,stocheps,inversion_radius,inverse_shift: Double;
   MO,Fl,fl1,fl2,fl3,fl4,fl7,fl8,ch1,ch2,notpaint,stopped,shownpas,sov,ch1a,
    notblack,floatxoring,searching,expch,tofile,fix_import_bug,totlcrz,saveblack,
    blackonly,transform,japan,smoothy,twostripes,invchx: Boolean;
@@ -450,6 +451,7 @@ begin
   Fl7:=e7.Text='-';
   Fl8:=e8.Text='-';
   invchx:=inversechx.Checked;
+  inversion_radius:=StrToFloat(invedt.Text);
   ch2:=chk2.Checked;
   stocheps:=StrToFloat(stochastic_edt.text);
   expch:=Exponent.Checked;
@@ -578,21 +580,23 @@ begin
           else f.Canvas.Pixels[x,y]:=(bin(x,y,typ)shl sh)*qlr;
         goto jumptoxorin;
       end;
+      if (n=1)or(n=0) then inverse_shift:=0 else
+        inverse_shift:=exp(1/(n-1)*ln(1/n))-exp(n/(n-1)*ln(1/n));
       If fl1 then z.x:=xr(x)
         else z.x:=ee1;
       If fl2 then z.y:=yr(y)
         else z.y:=ee2;
-      if invchx and (fl1 or fl2) then z:=dev(Complex(1,0),z);
+      if invchx and (fl1 or fl2) then z:=sum(dev(Complex(inversion_radius,0),sum(z,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
       If fl3 then c.x:=xr(x)
         else c.x:=ee3;
       If fl4 then c.y:=yr(y)
         else c.y:=ee4;
-      if invchx and (fl3 or fl4) then c:=dev(Complex(1,0),c);
+      if invchx and (fl3 or fl4) then c:=sum(dev(Complex(inversion_radius,0),sum(c,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
       If fl7 then v.x:=xr(x)
         else v.x:=ee7;
       If fl8 then v.y:=yr(y)
         else v.y:=ee8;
-      if invchx and (fl7 or fl8) then v:=dev(Complex(1,0),v);
+      if invchx and (fl7 or fl8) then v:=sum(dev(Complex(inversion_radius,0),sum(v,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
       i:=0;
       if stocheps<>0 then
       begin
@@ -859,7 +863,8 @@ begin
   edt5.Caption:=FloatToStr(xr(X));
   edt6.Caption:=FloatToStr(yr(Y));
   i:=f.Canvas.Pixels[X,Y];               //FloatToStr(xr(X)*xr(X)+yr(Y)*yr(Y))
-  edt7.Caption:=IntToStr(i and 255)+' '+IntToStr(i shr 8 and 255)+' '+IntToStr(i shr 16)+floattostr(frac(mus[x,y]/2520){' mus='+inttostr(mus[x,y]});
+  edt7.Caption:=IntToStr(i and 255)+' '+IntToStr(i shr 8 and 255)+' '+IntToStr(i shr 16)
+  //+floattostr(frac(mus[x,y]/2520){' mus='+inttostr(mus[x,y]});
 end;
 
 procedure TMF.eContextPopup(Sender: TObject; MousePos: TPoint;
@@ -1326,8 +1331,8 @@ begin
   if rel<1 then ord:=Round(ln(abs(et1-et3))/ln(10))
   else ord:=Round(ln(abs(et2-et4))/ln(10));
   ordd:=QPower(Complex(10,0),ord,0).x;
-  width_spn.Value:=Round(abs(et1-et3)/ordd*100);
-  height_spn.Value:=Round(abs(et1-et3)*rel/ordd*100);
+  width_spn.Value:=Round(abs(et1-et3)*rel/ordd*100);
+  height_spn.Value:=Round(abs(et1-et3)/ordd*100);
 end;
 
 procedure TMF.AcceptBtnClick(Sender: TObject);
@@ -1507,6 +1512,7 @@ var q,x,y{,s}: double;
   k: extended;
   //lambda,c: TComplex;
   Rsum,rsmall,l: double;
+  inz: TComplex;
 const eps=5e-2;
   RR=0.25;
 
@@ -1535,7 +1541,6 @@ begin
 //  s:=RR*k+RR*2;
  // s:=strtofloat(se2.Text);
   f.Canvas.Pen.Color:=$FF-random(50);
-  f.Canvas.MoveTo(xm(0),ym(0));
   q:=0;
   //for i:=1 to k do
 
@@ -1558,6 +1563,13 @@ begin
     c:=mul( QPower(dev(lambda,Complex(k,0)),0,1/(k-1) ),(sum(Complex(1,0),neg(dev(lambda,Complex(k,0))))));
     x:=c.x; y:=c.y;}
     q:=q+eps;
+    if invchx then
+    begin
+      inz:=Complex(x,y);
+      inz:=sum(dev(Complex(inversion_radius,0),sum(inz,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
+      //inz:=dev(Complex(inversion_radius,0),Complex(x-0.5,y));
+      x:=inz.x; y:=inz.y;
+    end;
     f.Canvas.LineTo(xm(x),ym(y));
     e.canvas.draw(0,0,f);
     e.Refresh;
@@ -1581,12 +1593,14 @@ begin
   {while k<10 do
   begin
     Application.ProcessMessages();
-    Gauge.Progress:=Round(20*k);  }
+    Gauge.Progress:=Round(20*k);  }  //0.5*e^(2*k*pi*i)
     ex:=mul(expz(Complex(0,8*arctan(1)*k)),Complex(0.5,0));
-    ans:=mul(ex,sum(Complex(1,0),neg(ex)));
+    ans:=mul(ex,sum(Complex(1,0),neg(ex))); // 0.5*e^(2*k*pi*i) * (1-0.5*e^(2*k*pi*i))
     f.Canvas.Pen.Color:=$FF-random(50);
     f.Canvas.LineTo(xm(ans.x),ym(ans.y));
     mus[xm(ans.x),ym(ans.y)]:=Round((k-1)*2520);
+    //https://upload.wikimedia.org/math/9/9/9/9990e0622b2dfbb762836f38d455581f.png
+    //2520 devides first 10 naturals, so 2520 = q, the denominator
     //anss:=sqrt(Absq(ans));//f.Canvas.Pixels[Round((k-1)*w),Round(h-anss*h))]:=clBlack;
     e.Canvas.Draw(0,0,f);
     e.Refresh;
@@ -1600,6 +1614,11 @@ end;
 procedure TMF.RandomQBtnClick(Sender: TObject);
 begin
   qlrspn.Value:=random(Maxint);
+end;
+
+procedure TMF.DragonBtnClick(Sender: TObject);
+begin
+//there should be smth
 end;
 
 end.
