@@ -1293,7 +1293,7 @@ object MF: TMF
     Height = 21
     Anchors = [akTop, akRight]
     TabOrder = 86
-    Text = '0,5'
+    Text = '0'
   end
   object OpenDial: TOpenDialog
     Left = 808

@@ -192,7 +192,7 @@ var
   f: TBitmap;
   xx,yy,xxx,yyy,w,h,black,start_of_draw: Integer;
   cbb:integer;//string;
-  ee1,ee2,ee3,ee4,ee7,ee8,et1,et2,et3,et4,inf,stocheps,inversion_radius,inverse_shift: Double;
+  ee1,ee2,ee3,ee4,ee7,ee8,et1,et2,et3,et4,inf,stocheps,inversion_shift_plus,inverse_shift: Double;
   MO,Fl,fl1,fl2,fl3,fl4,fl7,fl8,ch1,ch2,notpaint,stopped,shownpas,sov,ch1a,
    notblack,floatxoring,searching,expch,tofile,fix_import_bug,totlcrz,saveblack,
    blackonly,transform,japan,smoothy,twostripes,invchx: Boolean;
@@ -451,7 +451,7 @@ begin
   Fl7:=e7.Text='-';
   Fl8:=e8.Text='-';
   invchx:=inversechx.Checked;
-  inversion_radius:=StrToFloat(invedt.Text);
+  inversion_shift_plus:=StrToFloat(invedt.Text);
   ch2:=chk2.Checked;
   stocheps:=StrToFloat(stochastic_edt.text);
   expch:=Exponent.Checked;
@@ -582,21 +582,22 @@ begin
       end;
       if (n=1)or(n=0) then inverse_shift:=0 else
         inverse_shift:=exp(1/(n-1)*ln(1/n))-exp(n/(n-1)*ln(1/n));
+      inverse_shift:=inverse_shift+inversion_shift_plus;
       If fl1 then z.x:=xr(x)
         else z.x:=ee1;
       If fl2 then z.y:=yr(y)
         else z.y:=ee2;
-      if invchx and (fl1 or fl2) then z:=sum(dev(Complex(inversion_radius,0),sum(z,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
+      if invchx and (fl1 or fl2) then z:=sum(dev(Complex(0.5,0),sum(z,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
       If fl3 then c.x:=xr(x)
         else c.x:=ee3;
       If fl4 then c.y:=yr(y)
         else c.y:=ee4;
-      if invchx and (fl3 or fl4) then c:=sum(dev(Complex(inversion_radius,0),sum(c,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
+      if invchx and (fl3 or fl4) then c:=sum(dev(Complex(0.5,0),sum(c,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
       If fl7 then v.x:=xr(x)
         else v.x:=ee7;
       If fl8 then v.y:=yr(y)
         else v.y:=ee8;
-      if invchx and (fl7 or fl8) then v:=sum(dev(Complex(inversion_radius,0),sum(v,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
+      if invchx and (fl7 or fl8) then v:=sum(dev(Complex(0.5,0),sum(v,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
       i:=0;
       if stocheps<>0 then
       begin
@@ -1547,7 +1548,14 @@ begin
   rsmall:=exp(1/(k-1)*ln(1/k));
   Rsum:=exp(k/(k-1)*ln(1/k));
   x:=-Rsum*exp(n*ln(l))+rsmall*l;
+  inverse_shift:=x+inversion_shift_plus;
   y:=0;
+  if invchx then
+    begin
+      inz:=Complex(x,y);
+      inz:=sum(dev(Complex(0.5,0),sum(inz,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
+      x:=inz.x; y:=inz.y;
+    end;
   f.Canvas.MoveTo(xm(x),ym(y));
 
   repeat
@@ -1566,7 +1574,7 @@ begin
     if invchx then
     begin
       inz:=Complex(x,y);
-      inz:=sum(dev(Complex(inversion_radius,0),sum(inz,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
+      inz:=sum(dev(Complex(0.5,0),sum(inz,Complex(-inverse_shift,0))),Complex(inverse_shift,0));
       //inz:=dev(Complex(inversion_radius,0),Complex(x-0.5,y));
       x:=inz.x; y:=inz.y;
     end;
