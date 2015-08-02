@@ -1,21 +1,35 @@
 # -*- coding: utf-8
 import requests
 import time
-
-def call_api(method, params, token):        
-        params["access_token"] = token
-        params["v"] = "5.35"
-        url = "https://api.vk.com/method/" + method
-        result = requests.post(url, data=params).json()
-        return result["response"] if "response" in result else result
-	
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
-
+sleepTime = 1
 photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
 token_file.close()
 
+def call_api(method, params, token):        
+        params["access_token"] = token
+        params["v"] = "5.35"
+        url = "https://api.vk.com/method/" + method
+        while True:
+                try:
+                        result = requests.post(url, data=params).json()
+                        return result["response"] if "response" in result else result
+                except:
+                        sleep(sleepTime)
+                        
+def read_mnemonics(mnemofile):
+        result = {}
+        with open(mnemofile) as f:
+                for line in f:
+                        key, value = line.split()
+                        result[key] = value
+        f.close()
+        return result
+
+mnemonics = read_mnemonics('mnemo.txt')
+	
 def charfilter(s):
         r=''
         for c in s:
@@ -33,7 +47,9 @@ def messaging():
                 userid = 0
                 while (s=='')or(s[-1]!='#'):
                         s=input()
-                        if (m=='')&(s==''): return(0)
+                        if m=='':
+                                if s=='': return(0)
+                                #elif s='#N': call_api('notifications.markAsViewed', token_list[token_num])
                         sharp = s.find('#')
                         if userid==0:
                                 try:
@@ -48,19 +64,11 @@ def messaging():
                                         print('message format: userid#token number#multiple lines message#')
                                         continue
                         m+='\n'+s
-                call_api('messages.send', {'user_id': userid, 'message': m[:-1]}, token_list[token_num])
+                if m!='\n#':
+                        call_api('messages.send', {'user_id': userid, 'message': m[:-1]}, token_list[token_num])
+                else:
+                        call_api('messages.markAsRead', {'peer_id': userid}, token_list[token_num])
                 print('Done')
-
-def read_mnemonics(mnemofile):
-        result = {}
-        with open(mnemofile) as f:
-                for line in f:
-                        key, value = line.split()
-                        result[key] = value
-        f.close()
-        return result
-
-mnemonics = read_mnemonics('mnemo.txt')
 
 def print_attachments(attache):
         if attache is not None:
@@ -82,7 +90,7 @@ def print_attachments(attache):
                                 url = stuff.get('url')
                                 print(url[:url.find('?extra')])
 
-def main():
+def check_inbox():
         for mytoken in token_list:
                 myname = call_api('users.get', {}, mytoken)[0]
                 viewed_time = call_api('notifications.get',{'count': '0'}, mytoken).get('last_viewed')
@@ -120,7 +128,11 @@ def main():
                                 print(charfilter(comment))
                                 print_attachments(feedback.get('attachments'))
                 print("_____________")
-        messaging()
+
+def main():
+        while True:
+                check_inbox()
+                messaging()
         
 if __name__ == '__main__':
         main()
