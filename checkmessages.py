@@ -101,6 +101,11 @@ def main():
                                 for message in reversed(history):
                                         print(charfilter(message.get('body')))
                                         print_attachments(message.get('attachments'))
+                                        fwd = message.get('fwd_messages')
+                                        if fwd is not None:
+                                                print('fwd_messages')
+                                                for fwdm in fwd:
+                                                        print(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
                 print("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
