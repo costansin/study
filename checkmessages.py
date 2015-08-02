@@ -11,20 +11,29 @@ def call_api(method, params, token):
 	
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 
-photosizes = [2560, 1280, 807, 604, 130, 75]
+photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
 token_file.close()
+
+def charfilter(s):
+        r=''
+        for c in s:
+                if ord(c)<65536:
+                        r+=c
+                else:
+                        r+='vk.com/images/emoji/'+hex(ord(c)+3627804672).upper()[2:]+'_2x.png'
+        return r
 
 def messaging():
         print('message: 2343423#0#Hey!#')
         while True:
                 m = ''
-                s = '0'
+                s = ''
                 userid = 0
-                while s[-1]!='#':
+                while (s=='')or(s[-1]!='#'):
                         s=input()
-                        if s=='': return(0)
+                        if (m=='')&(s==''): return(0)
                         sharp = s.find('#')
                         if userid==0:
                                 try:
@@ -57,22 +66,20 @@ def print_attachments(attache):
         if attache is not None:
                 for attached in attache:
                         type = attached.get('type')
-                        if type=='photo':
-                                photo = attached.get('photo')
+                        stuff = attached.get(type)
+                        if (type=='photo')or(type=='sticker'):
                                 for size in photosizes:
-                                        link=photo.get('photo_'+str(size))
+                                        link=stuff.get('photo_'+str(size))
                                         if link is not None:
                                                 print(link)
                                                 break
                         elif type=='video':
-                                video = attached.get('video')
-                                req = str(video.get('owner_id'))+'_'+str(video.get('id'))+'_'+str(video.get('access_key'))
+                                req = str(stuff.get('owner_id'))+'_'+str(stuff.get('id'))+'_'+str(stuff.get('access_key'))
                                 print(call_api('video.get', {'videos': req}, mytoken).get('items')[0].get('player'))
                         elif type=='wall':
-                                post = attached.get('wall')
-                                print('vk.com/wall'+str(post.get('to_id'))+'_'+str(post.get('to_id')))
+                                print('vk.com/wall'+str(stuff.get('to_id'))+'_'+str(stuff.get('to_id')))
                         else:
-                                url = attached.get(type).get('url')
+                                url = stuff.get('url')
                                 print(url[:url.find('?extra')])
 
 def main():
@@ -92,7 +99,7 @@ def main():
                                 print(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                 history = call_api('messages.getHistory', {'count': N, 'user_id': uid}, mytoken).get('items')
                                 for message in reversed(history):
-                                        print(message.get('body'))
+                                        print(charfilter(message.get('body')))
                                         print_attachments(message.get('attachments'))
                 print("-------")
                 for x in reversed(notif_resp.get('items')):
@@ -105,7 +112,7 @@ def main():
                         if comment is None:
                                 print(x.get('type'))
                         else:
-                                print(comment)
+                                print(charfilter(comment))
                                 print_attachments(feedback.get('attachments'))
                 print("_____________")
         messaging()
