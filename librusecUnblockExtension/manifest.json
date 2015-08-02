@@ -1,0 +1,12 @@
+{
+    "name":"Librusec Unblock",
+    "version":"0.1",
+    "manifest_version": 2, 
+    "description":"Lib.rus.ec paywall destruction",
+    "content_scripts":[
+        {
+            "matches":["http://lib.rus.ec/*"],
+            "js":["script.js"]
+        }
+    ]
+}

@@ -959,6 +959,8 @@ begin
   edt2.Text:='1,33';
   edt3.Text:='0,7';
   edt4.Text:='-1,33';
+  inversechx.Checked:=false;
+  ResetNotPaintBtnClick(BitBtn2);
 end;
 
 procedure TMF.nfracbtnClick(Sender: TObject);
