@@ -136,11 +136,14 @@ def check_inbox():
                 for x in resp.get('items'):
                         N = x.get('unread')
                         mes = x.get('message')
-                        if mes.get('chat_id') is None: #check dialogue is not a chat
+                        chat_id = mes.get('chat_id')
+                        if chat_id is None: #check dialogue is not a chat
                                 uid = mes.get('user_id')
                                 respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
-                                prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                                print(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                 getHistory(N, uid, mytoken)
+                        else:
+                                call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, token_list[token_num]) #autoread
                 prints("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
