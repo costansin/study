@@ -122,7 +122,6 @@ def messaging():
                         print(printm)
                 print('Done')
 
-                                print(call_api('video.get', {'videos': req}, token).get('items')[0].get('player'))
 def check_inbox():
         A=0
         for mytoken in token_list:
