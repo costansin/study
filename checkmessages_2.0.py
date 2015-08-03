@@ -140,7 +140,7 @@ def check_inbox():
                         if chat_id is None: #check dialogue is not a chat
                                 uid = mes.get('user_id')
                                 respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
-                                print(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                                prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                 getHistory(N, uid, mytoken)
                         else:
                                 call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
