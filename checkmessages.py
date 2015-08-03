@@ -24,7 +24,7 @@ def read_mnemonics(mnemofile):
         with open(mnemofile) as f:
                 for line in f:
                         key, value = line.split()
-                        result[key] = value
+                        result[key] = int(value)
         f.close()
         return result
 
@@ -39,8 +39,19 @@ def charfilter(s):
                         r+='vk.com/images/emoji/'+hex(ord(c)+3627804672).upper()[2:]+'_2x.png'
         return r
 
+def getHistory(N, uid, token):
+        history = call_api('messages.getHistory', {'count': N, 'user_id': uid}, token).get('items')
+        for message in reversed(history):
+                print(charfilter(message.get('body')))
+                print_attachments(message.get('attachments'), token)
+                fwd = message.get('fwd_messages')
+                if fwd is not None:
+                        print('fwd_messages')
+                        for fwdm in fwd:
+                                print(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
+
 def messaging():
-        print('message: 2343423#0#Hey!#')
+        print('messaging')
         while True:
                 m = ''
                 s = ''
@@ -49,28 +60,37 @@ def messaging():
                         s=input()
                         if m=='':
                                 if s=='': return(0)
-                                #elif s='#N': call_api('notifications.markAsViewed', token_list[token_num])
                         sharp = s.find('#')
                         if userid==0:
                                 try:
                                         userstr = s[:sharp]
-                                        userid = mnemonics.get(userstr)
-                                        if userid is None: userid = int(userstr)
                                         s = s[sharp+1:]
                                         sharp = s.find('#')
                                         token_num = int(s[:sharp])
                                         s = s[sharp+1:]
+                                        if userstr=='N':
+                                                call_api('notifications.markAsViewed', {}, token_list[token_num])
+                                                print('Done')
+                                                return(0)
+                                        userid = mnemonics.get(userstr)
+                                        if userid is None: userid = int(userstr)
                                 except:
                                         print('message format: userid#token number#multiple lines message#')
                                         continue
                         m+='\n'+s
-                if m!='\n#':
-                        call_api('messages.send', {'user_id': userid, 'message': m[:-1]}, token_list[token_num])
-                else:
+                m=m[:-1]
+                if userid==0: return(0)
+                if userid<0:
+                         call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m}, token_list[token_num])
+                if m=='\n':
                         call_api('messages.markAsRead', {'peer_id': userid}, token_list[token_num])
+                elif m=='\n#':
+                        getHistory(10, userid, token_list[token_num])
+                else:
+                        call_api('messages.send', {'user_id': userid, 'message': m}, token_list[token_num])
                 print('Done')
 
-def print_attachments(attache):
+def print_attachments(attache, token):
         if attache is not None:
                 for attached in attache:
                         type = attached.get('type')
@@ -83,7 +103,7 @@ def print_attachments(attache):
                                                 break
                         elif type=='video':
                                 req = str(stuff.get('owner_id'))+'_'+str(stuff.get('id'))+'_'+str(stuff.get('access_key'))
-                                print(call_api('video.get', {'videos': req}, mytoken).get('items')[0].get('player'))
+                                print(call_api('video.get', {'videos': req}, token).get('items')[0].get('player'))
                         elif type=='wall':
                                 print('vk.com/wall'+str(stuff.get('to_id'))+'_'+str(stuff.get('to_id')))
                         else:
@@ -105,15 +125,7 @@ def check_inbox():
                                 uid = mes.get('user_id')
                                 respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
                                 print(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
-                                history = call_api('messages.getHistory', {'count': N, 'user_id': uid}, mytoken).get('items')
-                                for message in reversed(history):
-                                        print(charfilter(message.get('body')))
-                                        print_attachments(message.get('attachments'))
-                                        fwd = message.get('fwd_messages')
-                                        if fwd is not None:
-                                                print('fwd_messages')
-                                                for fwdm in fwd:
-                                                        print(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
+                                getHistory(N, uid, mytoken)
                 print("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
@@ -126,7 +138,7 @@ def check_inbox():
                                 print(x.get('type'))
                         else:
                                 print(charfilter(comment))
-                                print_attachments(feedback.get('attachments'))
+                                print_attachments(feedback.get('attachments'), mytoken)
                 print("_____________")
 
 def main():
