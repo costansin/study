@@ -143,7 +143,7 @@ def check_inbox():
                                 print(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                 getHistory(N, uid, mytoken)
                         else:
-                                call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, token_list[token_num]) #autoread
+                                call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
                 prints("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
