@@ -182,6 +182,7 @@ def main():
                         time.sleep(waitTime)
         else:
                 while True:
+                        printm=''
                         check_inbox()
                         print(printm)
                         messaging()
