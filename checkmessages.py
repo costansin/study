@@ -71,14 +71,16 @@ def print_attachments(attache, token):
 
 def getHistory(N, uid, token):
         history = call_api('messages.getHistory', {'count': N, 'user_id': uid}, token).get('items')
-        for message in reversed(history):
-                prints(charfilter(message.get('body')))
-                print_attachments(message.get('attachments'), token)
-                fwd = message.get('fwd_messages')
-                if fwd is not None:
-                        prints('fwd_messages')
-                        for fwdm in fwd:
-                                prints(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
+        if history is not None:
+                for message in reversed(history):
+                        prints(charfilter(message.get('body')))
+                        print_attachments(message.get('attachments'), token)
+                        fwd = message.get('fwd_messages')
+                        if fwd is not None:
+                                prints('fwd_messages')
+                                for fwdm in fwd:
+                                        prints(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
+                                        print_attachments(fwdm.get('attachments'), token) 
 
 def messaging():
         print('messaging')
@@ -148,9 +150,11 @@ def check_inbox():
                                 A-=1
                 prints("-------")
                 for x in reversed(notif_resp.get('items')):
-                        parent = x.get('parent')
+                        parent = x.get('parent') 
                         parent_id = parent.get('to_id')
-                        if parent_id is None: parent_id = parent.get('post').get('to_id')
+                        if parent_id is None:
+                                if parent.get('post') is None: parent_id = parent.get('owner_id')
+                                else: parent_id = parent.get('post').get('to_id')
                         prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                         feedback = x.get('feedback')
                         comment = feedback.get('text')
