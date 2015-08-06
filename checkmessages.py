@@ -13,6 +13,8 @@ token_file.close()
 printm=''
 width=0
 height=0
+mnemonics={}
+ignore=[]
 
 def call_api(method, params, token):        
         params["access_token"] = token
@@ -34,8 +36,21 @@ def read_mnemonics(mnemofile):
         f.close()
         return result
 
-mnemonics = read_mnemonics('mnemo.txt')
-	
+def read_ignore(ignore_file):
+        result = []
+        with open(ignore_file) as f:
+                for line in f:
+                        line=line.strip()
+                        if line in mnemonics:
+                                result.append(mnemonics.get(line))
+                        else:
+                                try:
+                                        result.append(int(line))
+                                except:
+                                        print('ignore file error')
+        f.close()
+        return result
+
 def charfilter(s):
         r=''
         for c in s:
@@ -142,6 +157,9 @@ def check_inbox():
                         chat_id = mes.get('chat_id')
                         if chat_id is None: #check dialogue is not a chat
                                 uid = mes.get('user_id')
+                                if uid in ignore:
+                                        A-=1
+                                        continue
                                 respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
                                 prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                 getHistory(N, uid, mytoken)
@@ -170,7 +188,9 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument('-L', help='looping', action='store_true')
         args = parser.parse_args()
-        global printm
+        global printm, mnemonics, ignore
+        mnemonics = read_mnemonics('mnemo.txt')
+        ignore = read_ignore('ignore.txt')
         if args.L:
                 while True:
                         printm=''
