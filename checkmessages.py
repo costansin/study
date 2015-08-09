@@ -2,6 +2,7 @@
 import requests
 import time
 import argparse
+import ast
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime = 1
@@ -15,6 +16,7 @@ width=0
 height=0
 mnemonics={}
 ignore=[]
+token_num=0
 
 def call_api(method, params, token):        
         params["access_token"] = token
@@ -101,26 +103,37 @@ def getHistory(N, uid, token):
                                         print_attachments(fwdm.get('attachments'), token) 
 
 def messaging():
-        print('messaging')
+        global token_num, printm
+        print('messaging, token is ', token_num)
         while True:
                 m = ''
                 s = ''
                 userid = 0
                 while (s=='')or((s[-1]!='#')and(s[-1]!='№')):
                         s=input()
-                        if (m=='')&(s==''): return(0)
+                        if (m==''):
+                                if (s==''): return(0)
+                                if (len(s)==1):
+                                        if s.isdigit():
+                                                token_num = int(s)
+                                                return(0)
+                                        elif s=='N':
+                                                call_api('notifications.markAsViewed', {}, token_list[token_num])
+                                                print('Done')
+                                                return(0)
+                                        elif s=='T':
+                                                s=input()
+                                                g=call_api(*(ast.literal_eval(s)+(token_list[token_num],)))
+                                                print(charfilter(str(g)))
+                                                return(0)
+                                        else:
+                                                print('incorrect symbol')
+                                                return(0)
                         sharp = s.find('#')
                         if userid==0:
                                 try:
                                         userstr = s[:sharp]
                                         s = s[sharp+1:]
-                                        sharp = s.find('#')
-                                        token_num = int(s[:sharp])
-                                        s = s[sharp+1:]
-                                        if userstr=='N':
-                                                call_api('notifications.markAsViewed', {}, token_list[token_num])
-                                                print('Done')
-                                                return(0)
                                         userid = mnemonics.get(userstr)
                                         if userid is None: userid = int(userstr)
                                 except:
@@ -129,7 +142,6 @@ def messaging():
                         m+='\n'+s
                 m=m[:-1]
                 if userid==0: return(0)
-                global printm
                 if userid<0:
                          call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m}, token_list[token_num])
                 if m=='\n':
