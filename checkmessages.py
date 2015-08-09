@@ -25,7 +25,7 @@ def call_api(method, params, token):
                         result = requests.post(url, data=params).json()
                         return result["response"] if "response" in result else result
                 except:
-                        sleep(sleepTime)
+                        time.sleep(sleepTime)
                         
 def read_mnemonics(mnemofile):
         result = {}
@@ -79,7 +79,10 @@ def print_attachments(attache, token):
                                 req = str(stuff.get('owner_id'))+'_'+str(stuff.get('id'))+'_'+str(stuff.get('access_key'))
                                 prints(call_api('video.get', {'videos': req}, token).get('items')[0].get('player'))
                         elif type=='wall':
-                                prints('vk.com/wall'+str(stuff.get('to_id'))+'_'+str(stuff.get('to_id')))
+                                prints('vk.com/wall'+str(stuff.get('to_id'))+'_'+str(stuff.get('id')))
+                        elif type=='wall_reply':
+                                prints('vk.com/wall'+str(stuff.get('owner_id'))+'_'+str(stuff.get('id')))
+
                         else:
                                 url = stuff.get('url')
                                 prints(url[:url.find('?extra')])
@@ -131,8 +134,10 @@ def messaging():
                          call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m}, token_list[token_num])
                 if m=='\n':
                         call_api('messages.markAsRead', {'peer_id': userid}, token_list[token_num])
-                elif m=='\n#':
                         getHistory(10, userid, token_list[token_num])
+                        print(printm)
+                elif m=='\n#':
+                        getHistory(50, userid, token_list[token_num])
                         print(printm)
                 else:
                         call_api('messages.send', {'user_id': userid, 'message': m}, token_list[token_num])
