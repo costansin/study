@@ -137,7 +137,7 @@ def messaging():
                                         userid = mnemonics.get(userstr)
                                         if userid is None: userid = int(userstr)
                                 except:
-                                        print('message format: userid#token number#multiple lines message#')
+                                        print('message format: userid#multiple lines message#')
                                         continue
                         m+='\n'+s
                 m=m[:-1]
@@ -185,13 +185,20 @@ def check_inbox():
                                 A-=1
                 prints("-------")
                 for x in reversed(notif_resp.get('items')):
-                        parent = x.get('parent') 
-                        parent_id = parent.get('to_id')
-                        if parent_id is None:
-                                if parent.get('post') is None: parent_id = parent.get('owner_id')
-                                else: parent_id = parent.get('post').get('to_id')
-                        prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+                        parent = x.get('parent')
+                        if parent is None:
+                                prints('no_parent')
+                        else:
+                                parent_id = parent.get('to_id')
+                                if parent_id is None:
+                                        if parent.get('post') is None: parent_id = parent.get('owner_id')
+                                        else: parent_id = parent.get('post').get('to_id')
+                                prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                         feedback = x.get('feedback')
+                        whos = feedback.get('items')
+                        if whos is not None:
+                                for who in whos:
+                                        prints(str(who.get('from_id')))
                         comment = feedback.get('text')
                         if comment is None:
                                 prints(x.get('type'))
