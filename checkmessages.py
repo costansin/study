@@ -58,7 +58,7 @@ def charfilter(s):
         for c in s:
                 if ord(c)<65536:
                         r+=c
-                else:
+                else: #sometimes -FC00, need fix: e.g. D83DDB52 -> D83CDF52
                         r+='vk.com/images/emoji/'+hex(ord(c)+3627804672).upper()[2:]+'_2x.png'
         return r
 
@@ -123,13 +123,16 @@ def messaging():
                                                 continue
                                         elif s=='T':
                                                 s=input()
-                                                g=call_api(*(ast.literal_eval(s)+(token_list[token_num],)))
+                                                lit = ast.literal_eval(s)+(token_list[token_num],)
+                                                g=call_api(*lit)
                                                 print(charfilter(str(g)))
                                                 continue
                                         else:
                                                 print('incorrect symbol')
                                                 continue
                         sharp = s.find('#')
+                        Nsign = s.find('№')
+                        if (Nsign>=0)and((Nsign<sharp)or(sharp<0)): sharp = Nsign
                         if userid==0:
                                 try:
                                         userstr = s[:sharp]
@@ -148,7 +151,7 @@ def messaging():
                         call_api('messages.markAsRead', {'peer_id': userid}, token_list[token_num])
                         getHistory(10, userid, token_list[token_num])
                         print(printm)
-                elif m=='\n#':
+                elif (m=='\n#')or(m=='\n№'):
                         getHistory(50, userid, token_list[token_num])
                         print(printm)
                 else:
