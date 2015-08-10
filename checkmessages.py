@@ -116,19 +116,19 @@ def messaging():
                                 if (len(s)==1):
                                         if s.isdigit():
                                                 token_num = int(s)
-                                                return(0)
+                                                continue
                                         elif s=='N':
                                                 call_api('notifications.markAsViewed', {}, token_list[token_num])
                                                 print('Done')
-                                                return(0)
+                                                continue
                                         elif s=='T':
                                                 s=input()
                                                 g=call_api(*(ast.literal_eval(s)+(token_list[token_num],)))
                                                 print(charfilter(str(g)))
-                                                return(0)
+                                                continue
                                         else:
                                                 print('incorrect symbol')
-                                                return(0)
+                                                continue
                         sharp = s.find('#')
                         if userid==0:
                                 try:
