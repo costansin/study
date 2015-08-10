@@ -193,7 +193,10 @@ def check_inbox():
                                 if parent_id is None:
                                         if parent.get('post') is None: parent_id = parent.get('owner_id')
                                         else: parent_id = parent.get('post').get('to_id')
-                                prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+                                if 'photo' in x.get('type'):
+                                        prints('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
+                                else:
+                                        prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                         feedback = x.get('feedback')
                         whos = feedback.get('items')
                         if whos is not None:
