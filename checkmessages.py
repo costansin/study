@@ -87,7 +87,10 @@ def print_attachments(attache, token):
 
                         else:
                                 url = stuff.get('url')
-                                prints(url[:url.find('?extra')])
+                                if url is not None:
+                                        prints(url[:url.find('?extra')])
+                                else:
+                                        prints(type)
 
 def getHistory(N, uid, token):
         history = call_api('messages.getHistory', {'count': N, 'user_id': uid}, token).get('items')
@@ -126,6 +129,12 @@ def messaging():
                                                 lit = ast.literal_eval(s)+(token_list[token_num],)
                                                 g=call_api(*lit)
                                                 print(charfilter(str(g)))
+                                                continue
+                                        elif s=='V':
+                                                s=input()
+                                                v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long'}, token_list[token_num])
+                                                for vid in v.get('items'):
+                                                        print(vid.get('player'))
                                                 continue
                                         else:
                                                 print('incorrect symbol')
