@@ -6,7 +6,7 @@ import ast
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime = 1
-waitTime = 10
+waitTime = 0
 photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
@@ -104,7 +104,7 @@ def getHistory(N, uid, token):
 
 def messaging():
         global token_num, printm
-        print('messaging, token is ', token_num)
+        print('messaging, token is', token_num)
         while True:
                 m = ''
                 s = ''
@@ -215,13 +215,14 @@ def check_inbox():
         return(A) #messages+notifies of all tokens
 
 def main():
+        global printm, mnemonics, ignore, waitTime
         parser = argparse.ArgumentParser()
-        parser.add_argument('-L', help='looping', action='store_true')
+        parser.add_argument('-L', help='looping', type=int, required=False)
         args = parser.parse_args()
-        global printm, mnemonics, ignore
+        waitTime = vars(args).get('L')
         mnemonics = read_mnemonics('mnemo.txt')
         ignore = read_ignore('ignore.txt')
-        if args.L:
+        if waitTime is not None:
                 while True:
                         printm=''
                         if check_inbox()>0:
