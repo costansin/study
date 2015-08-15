@@ -5,7 +5,7 @@ import argparse
 import ast
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
-sleepTime = 1
+sleepTime = 2
 waitTime = 0
 photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
@@ -18,7 +18,8 @@ mnemonics={}
 ignore=[]
 token_num=0
 
-def call_api(method, params, token):        
+def call_api(method, params, token):
+        print('.', end='')
         params["access_token"] = token
         params["v"] = "5.35"
         url = "https://api.vk.com/method/" + method
@@ -27,8 +28,8 @@ def call_api(method, params, token):
                         result = requests.post(url, data=params).json()
                         return result["response"] if "response" in result else result
                 except:
+                        print('error')
                         time.sleep(sleepTime)
-                        
 def read_mnemonics(mnemofile):
         result = {}
         with open(mnemofile) as f:
@@ -63,6 +64,7 @@ def charfilter(s):
         return r
 
 def prints(s):
+        #print(s)
         global printm
         printm+=s+'\n'
 
@@ -92,8 +94,8 @@ def print_attachments(attache, token):
                                 else:
                                         prints(type)
 
-def getHistory(N, uid, token):
-        history = call_api('messages.getHistory', {'count': N, 'user_id': uid}, token).get('items')
+def getHistory(N, offset, uid, token):
+        history = call_api('messages.getHistory', {'count': N, 'offset': offset, 'user_id': uid}, token).get('items')
         if history is not None:
                 for message in reversed(history):
                         prints(charfilter(message.get('body')))
@@ -153,19 +155,22 @@ def messaging():
                                         continue
                         m+='\n'+s
                 m=m[:-1]
-                if userid==0: return(0)
+                if (userid==0)or(userid is None): return(0)
                 if userid<0:
                          call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m}, token_list[token_num])
                 if m=='\n':
                         call_api('messages.markAsRead', {'peer_id': userid}, token_list[token_num])
-                        getHistory(10, userid, token_list[token_num])
+                        getHistory(10, 0, userid, token_list[token_num])
                         print(printm)
                 elif (m=='\n#')or(m=='\n№'):
-                        getHistory(50, userid, token_list[token_num])
+                        getHistory(200, 0, userid, token_list[token_num])
                         print(printm)
+                elif (m=='\n##')or(m=='\n№№'):
+                        getHistory(200, 200, userid, token_list[token_num])
+                        print(printm)        
                 else:
                         call_api('messages.send', {'user_id': userid, 'message': m}, token_list[token_num])
-                        getHistory(10, userid, token_list[token_num])
+                        getHistory(10, 0, userid, token_list[token_num])
                         print(printm)
                 print('Done')
 
@@ -180,21 +185,23 @@ def check_inbox():
                 t = resp.get('count')
                 A+=r+t
                 prints(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
-                for x in resp.get('items'):
-                        N = x.get('unread')
-                        mes = x.get('message')
-                        chat_id = mes.get('chat_id')
-                        if chat_id is None: #check dialogue is not a chat
-                                uid = mes.get('user_id')
-                                if uid in ignore:
+                items = resp.get('items')
+                if items:
+                        for x in resp.get('items'):
+                                N = x.get('unread')
+                                mes = x.get('message')
+                                chat_id = mes.get('chat_id')
+                                if chat_id is None: #check dialogue is not a chat
+                                        uid = mes.get('user_id')
+                                        if uid in ignore:
+                                                A-=1
+                                                continue
+                                        respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
+                                        prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                                        getHistory(N, 0, uid, mytoken)
+                                else:
+                                        call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
                                         A-=1
-                                        continue
-                                respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
-                                prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
-                                getHistory(N, uid, mytoken)
-                        else:
-                                call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
-                                A-=1
                 prints("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
@@ -236,6 +243,8 @@ def main():
                         printm=''
                         if check_inbox()>0:
                                 master=Tk()
+                                master.wm_attributes("-topmost", 1)
+                                master.wm_state('normal')
                                 w = Canvas(master, width=width, height=height)
                                 w.pack()
                                 w = Message(master, text=printm)
@@ -246,7 +255,7 @@ def main():
                         time.sleep(waitTime)
         else:
                 while True:
-                        printm=''
+                        printm='\n'
                         check_inbox()
                         print(printm)
                         messaging()
