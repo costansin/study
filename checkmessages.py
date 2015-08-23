@@ -1,12 +1,21 @@
 # -*- coding: utf-8
 import requests
 import time
+<<<<<<< HEAD
 import ast
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime = 1
 waitTime = 100
 looping = False
+=======
+import argparse
+import ast
+from tkinter import *
+#https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
+sleepTime = 2
+waitTime = 0
+>>>>>>> origin/master
 photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
@@ -19,8 +28,12 @@ ignore=[]
 token_num=0
 
 def call_api(method, params, token):
+<<<<<<< HEAD
         #time.sleep(sleepTime)
         print('.', end='') if not looping else print('.')
+=======
+        print('.', end='')
+>>>>>>> origin/master
         params["access_token"] = token
         params["v"] = "5.35"
         url = "https://api.vk.com/method/" + method
@@ -91,8 +104,12 @@ def print_attachments(attache, token):
                         else:
                                 url = stuff.get('url')
                                 if url is not None:
+<<<<<<< HEAD
                                         urlf = url.find('?extra')        
                                         prints(url[:urlf]) if (urlf!=-1) else prints(url)
+=======
+                                        prints(url[:url.find('?extra')])
+>>>>>>> origin/master
                                 else:
                                         prints(type)
 
@@ -120,6 +137,7 @@ def messaging():
                         s=input()
                         if (m==''):
                                 if (s==''): return(0)
+<<<<<<< HEAD
                                 attachments=None
                                 if s.isdigit():
                                         ints = int(s)
@@ -138,21 +156,37 @@ def messaging():
                                                 print('Done')
                                                 continue
                                         elif (s.lower()=='t')or(s.lower()=='е'):
+=======
+                                if (len(s)==1):
+                                        if s.isdigit():
+                                                token_num = int(s)
+                                                continue
+                                        elif s=='N':
+                                                call_api('notifications.markAsViewed', {}, token_list[token_num])
+                                                print('Done')
+                                                continue
+                                        elif s=='T':
+>>>>>>> origin/master
                                                 s=input()
                                                 lit = ast.literal_eval(s)+(token_list[token_num],)
                                                 g=call_api(*lit)
                                                 print(charfilter(str(g)))
                                                 continue
+<<<<<<< HEAD
                                         elif (s.lower()=='l')or(s.lower()=='д'):
                                                 liketype, what = input().split()
                                                 lowner, lid = what.split('_') #ifLiked - likes.delete
                                                 print(call_api('likes.add', {'type': liketype, 'owner_id': lowner, 'item_id': lid}, token_list[token_num]))
                                         elif (s.lower()=='v')or(s.lower()=='м'):
+=======
+                                        elif s=='V':
+>>>>>>> origin/master
                                                 s=input()
                                                 v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long'}, token_list[token_num])
                                                 for vid in v.get('items'):
                                                         print(vid.get('player'))
                                                 continue
+<<<<<<< HEAD
                                         elif (s=='A')or(s=='Ф'):
                                                 autor=input().lower()
                                                 auname=input().lower()
@@ -187,6 +221,8 @@ def messaging():
                                                 if suserid is None: suserid = int(s)
                                                 print(call_api('friends.add', {'user_id': suserid}, token_list[token_num]))
                                                 continue
+=======
+>>>>>>> origin/master
                                         else:
                                                 print('incorrect symbol')
                                                 continue
@@ -218,7 +254,11 @@ def messaging():
                         getHistory(200, 200, userid, token_list[token_num])
                         print(printm)        
                 else:
+<<<<<<< HEAD
                         call_api('messages.send', {'user_id': userid, 'message': m, 'attachment': attachments}, token_list[token_num])
+=======
+                        call_api('messages.send', {'user_id': userid, 'message': m}, token_list[token_num])
+>>>>>>> origin/master
                         getHistory(10, 0, userid, token_list[token_num])
                         print(printm)
                 print('Done')
@@ -245,7 +285,10 @@ def check_inbox():
                                         uid = mes.get('user_id')
                                         if uid in ignore:
                                                 A-=1
+<<<<<<< HEAD
                                                 t-=1
+=======
+>>>>>>> origin/master
                                                 continue
                                         respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
                                         prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
@@ -253,16 +296,23 @@ def check_inbox():
                                 else:
                                         call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
                                         A-=1
+<<<<<<< HEAD
                                         t-=1
                 if (t>0): token_num = index
                 prints("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
                         xtype = x.get('type')
+=======
+                prints("-------")
+                for x in reversed(notif_resp.get('items')):
+                        parent = x.get('parent')
+>>>>>>> origin/master
                         if parent is None:
                                 prints('no_parent')
                         else:
                                 parent_id = parent.get('to_id')
+<<<<<<< HEAD
                                 if parent_id is None:                
                                       if parent.get('post') is not None:
                                               parent = parent.get('post')
@@ -276,13 +326,26 @@ def check_inbox():
                                       prints('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
                                 else:
                                       prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+=======
+                                if parent_id is None:
+                                        if parent.get('post') is None: parent_id = parent.get('owner_id')
+                                        else: parent_id = parent.get('post').get('to_id')
+                                if 'photo' in x.get('type'):
+                                        prints('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
+                                else:
+                                        prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+>>>>>>> origin/master
                         feedback = x.get('feedback')
                         whos = feedback.get('items')
                         if whos is not None:
                                 for who in whos:
+<<<<<<< HEAD
                                         whuid = who.get('from_id')
                                         whuidinfo = call_api('users.get', {'user_ids': whuid}, mytoken)[0]
                                         prints(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
+=======
+                                        prints(str(who.get('from_id')))
+>>>>>>> origin/master
                         comment = feedback.get('text')
                         if comment is None:
                                 prints(xtype)
@@ -293,6 +356,7 @@ def check_inbox():
         return(A) #messages+notifies of all tokens
 
 def main():
+<<<<<<< HEAD
         global printm, mnemonics, ignore, waitTime, looping
         mnemonics = read_mnemonics('mnemo.txt')
         ignore = read_ignore('ignore.txt')
@@ -305,6 +369,17 @@ def main():
                         print(printm)
                         mes=messaging()
                 else:
+=======
+        global printm, mnemonics, ignore, waitTime
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-L', help='looping', type=int, required=False)
+        args = parser.parse_args()
+        waitTime = vars(args).get('L')
+        mnemonics = read_mnemonics('mnemo.txt')
+        ignore = read_ignore('ignore.txt')
+        if waitTime is not None:
+                while True:
+>>>>>>> origin/master
                         printm=''
                         looping = True
                         while (check_inbox()==0):
@@ -324,6 +399,18 @@ def main():
                                 w.pack()
                                 master.mainloop()
                                 print(printm)
+<<<<<<< HEAD
                         looping = False
+=======
+                                messaging()
+                        time.sleep(waitTime)
+        else:
+                while True:
+                        printm='\n'
+                        check_inbox()
+                        print(printm)
+                        messaging()
+                
+>>>>>>> origin/master
 if __name__ == '__main__':
         main()
