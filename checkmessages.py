@@ -1,12 +1,13 @@
 # -*- coding: utf-8
 import requests
 import time
-import argparse
+import datetime
 import ast
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
-sleepTime = 2
-waitTime = 0
+sleepTime = 1
+waitTime = 53
+looping = False
 photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
@@ -19,7 +20,8 @@ ignore=[]
 token_num=0
 
 def call_api(method, params, token):
-        print('.', end='')
+        #time.sleep(sleepTime)
+        print('.', end='') if not looping else print('.')
         params["access_token"] = token
         params["v"] = "5.35"
         url = "https://api.vk.com/method/" + method
@@ -90,7 +92,8 @@ def print_attachments(attache, token):
                         else:
                                 url = stuff.get('url')
                                 if url is not None:
-                                        prints(url[:url.find('?extra')])
+                                        urlf = url.find('?extra')        
+                                        prints(url[:urlf]) if (urlf!=-1) else prints(url)
                                 else:
                                         prints(type)
 
@@ -108,35 +111,90 @@ def getHistory(N, offset, uid, token):
                                         print_attachments(fwdm.get('attachments'), token) 
 
 def messaging():
-        global token_num, printm
+        global token_num, printm, waitTime
         print('messaging, token is', token_num)
         while True:
                 m = ''
                 s = ''
                 userid = 0
                 while (s=='')or((s[-1]!='#')and(s[-1]!='№')):
-                        s=input()
+                        try:
+                                s=input()
+                        except KeyboardInterrupt:
+                                return(0)
                         if (m==''):
                                 if (s==''): return(0)
+                                attachments=None
+                                if s.isdigit():
+                                        ints = int(s)
+                                        if ints<10: token_num = ints
+                                        else: waitTime = ints
+                                        continue
                                 if (len(s)==1):
-                                        if s.isdigit():
-                                                token_num = int(s)
-                                                continue
-                                        elif s=='N':
+                                        if (s=="'")or(s=='э'):
+                                                return(-1)
+                                        if s=='+':
+                                                s=input()
+                                                attachments=s
+                                                s=input() #no continue for message
+                                        elif (s.lower()=='n')or(s.lower()=='т'):
                                                 call_api('notifications.markAsViewed', {}, token_list[token_num])
                                                 print('Done')
                                                 continue
-                                        elif s=='T':
+                                        elif (s.lower()=='t')or(s.lower()=='е'):
                                                 s=input()
                                                 lit = ast.literal_eval(s)+(token_list[token_num],)
                                                 g=call_api(*lit)
                                                 print(charfilter(str(g)))
                                                 continue
-                                        elif s=='V':
+                                        elif (s.lower()=='l')or(s.lower()=='д'):
+                                                liketype, what = input().split()
+                                                lowner, lid = what.split('_') #ifLiked - likes.delete
+                                                print(call_api('likes.add', {'type': liketype, 'owner_id': lowner, 'item_id': lid}, token_list[token_num]))
+                                                continue
+                                        elif (s.lower()=='v')or(s.lower()=='м'):
                                                 s=input()
                                                 v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long'}, token_list[token_num])
                                                 for vid in v.get('items'):
                                                         print(vid.get('player'))
+                                                continue
+                                        elif (s=='A')or(s=='Ф'):
+                                                autor=input().lower()
+                                                auname=input().lower()
+                                                audio_list = call_api('audio.search', {'q': autor+' '+auname}, token_list[token_num]).get('items')
+                                                for audio in audio_list:
+                                                        if (audio.get('artist').lower()==autor)and(audio.get('title').lower()==auname):
+                                                                url = audio.get('url')
+                                                                print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id'))) 
+                                                continue
+                                        elif (s=='a')or(s=='ф'):
+                                                s=input()
+                                                audio_list = call_api('audio.search', {'q': s}, token_list[token_num]).get('items')
+                                                print()
+                                                for audio in audio_list:
+                                                        url = audio.get('url')
+                                                        print(audio.get('artist'),'-',audio.get('title'))
+                                                        print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id'))) 
+                                                continue
+                                        elif (s.lower()=='u')or(s.lower()=='г'):
+                                                s=input()
+                                                suserid = mnemonics.get(s)
+                                                if suserid is None:
+                                                        try:
+                                                                suserid = int(s)
+                                                        except:
+                                                                suserid = s
+                                                info = call_api('users.get', {'user_ids': suserid}, token_list[token_num])[0]
+                                                print(info)
+                                                actif = call_api('messages.getLastActivity', {'user_id': info.get('id')}, token_list[token_num])
+                                                onstatus = 'online' if actif.get('online') else 'offline'
+                                                print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
+                                                continue
+                                        elif (s.lower()=='f')or(s.lower()=='а'):
+                                                s=input()
+                                                suserid = mnemonics.get(s)
+                                                if suserid is None: suserid = int(s)
+                                                print(call_api('friends.add', {'user_id': suserid}, token_list[token_num]))
                                                 continue
                                         else:
                                                 print('incorrect symbol')
@@ -157,8 +215,8 @@ def messaging():
                 m=m[:-1]
                 if (userid==0)or(userid is None): return(0)
                 if userid<0:
-                         call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m}, token_list[token_num])
-                if m=='\n':
+                         call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}, token_list[token_num])
+                if (m=='\n')and(attachments is None):
                         call_api('messages.markAsRead', {'peer_id': userid}, token_list[token_num])
                         getHistory(10, 0, userid, token_list[token_num])
                         print(printm)
@@ -169,14 +227,15 @@ def messaging():
                         getHistory(200, 200, userid, token_list[token_num])
                         print(printm)        
                 else:
-                        call_api('messages.send', {'user_id': userid, 'message': m}, token_list[token_num])
+                        call_api('messages.send', {'user_id': userid, 'message': m, 'attachment': attachments}, token_list[token_num])
                         getHistory(10, 0, userid, token_list[token_num])
                         print(printm)
                 print('Done')
 
 def check_inbox():
         A=0
-        for mytoken in token_list:
+        global token_num
+        for index, mytoken in enumerate(token_list):
                 myname = call_api('users.get', {}, mytoken)[0]
                 viewed_time = call_api('notifications.get',{'count': '0'}, mytoken).get('last_viewed')
                 notif_resp = call_api('notifications.get',{'start_time': viewed_time}, mytoken)
@@ -195,6 +254,7 @@ def check_inbox():
                                         uid = mes.get('user_id')
                                         if uid in ignore:
                                                 A-=1
+                                                t-=1
                                                 continue
                                         respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
                                         prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
@@ -202,28 +262,39 @@ def check_inbox():
                                 else:
                                         call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
                                         A-=1
+                                        t-=1
+                if (t>0): token_num = index
                 prints("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
+                        xtype = x.get('type')
                         if parent is None:
                                 prints('no_parent')
                         else:
                                 parent_id = parent.get('to_id')
-                                if parent_id is None:
-                                        if parent.get('post') is None: parent_id = parent.get('owner_id')
-                                        else: parent_id = parent.get('post').get('to_id')
-                                if 'photo' in x.get('type'):
-                                        prints('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
+                                if parent_id is None:                
+                                      if parent.get('post') is not None:
+                                              parent = parent.get('post')
+                                              parent_id = parent.get('to_id')
+                                      elif parent.get('photo') is not None:
+                                              parent = parent.get('photo')
+                                              parent_id = parent.get('owner_id')
+                                      else:
+                                              parent_id = parent.get('owner_id')
+                                if 'photo' in xtype:
+                                      prints('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
                                 else:
-                                        prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+                                      prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                         feedback = x.get('feedback')
                         whos = feedback.get('items')
                         if whos is not None:
                                 for who in whos:
-                                        prints(str(who.get('from_id')))
+                                        whuid = who.get('from_id')
+                                        whuidinfo = call_api('users.get', {'user_ids': whuid}, mytoken)[0]
+                                        prints(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
                         comment = feedback.get('text')
                         if comment is None:
-                                prints(x.get('type'))
+                                prints(xtype)
                         else:
                                 prints(charfilter(comment))
                                 print_attachments(feedback.get('attachments'), mytoken)
@@ -231,34 +302,37 @@ def check_inbox():
         return(A) #messages+notifies of all tokens
 
 def main():
-        global printm, mnemonics, ignore, waitTime
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-L', help='looping', type=int, required=False)
-        args = parser.parse_args()
-        waitTime = vars(args).get('L')
+        global printm, mnemonics, ignore, waitTime, looping
         mnemonics = read_mnemonics('mnemo.txt')
         ignore = read_ignore('ignore.txt')
-        if waitTime is not None:
-                while True:
+        while True:
+                mes=0
+                mes=messaging()
+                while (mes!=-1):
+                        printm='\n'
+                        check_inbox()
+                        print(printm)
+                        mes=messaging()
+                else:
                         printm=''
-                        if check_inbox()>0:
+                        looping = True
+                        while (check_inbox()==0):
+                                printm=''
+                                print('-')
+                                try:
+                                        for timer in range(waitTime):
+                                                time.sleep(1)
+                                except KeyboardInterrupt:
+                                        break
+                        else:
                                 master=Tk()
                                 master.wm_attributes("-topmost", 1)
                                 master.wm_state('normal')
                                 w = Canvas(master, width=width, height=height)
-                                w.pack()
                                 w = Message(master, text=printm)
                                 w.pack()
                                 master.mainloop()
                                 print(printm)
-                                messaging()
-                        time.sleep(waitTime)
-        else:
-                while True:
-                        printm='\n'
-                        check_inbox()
-                        print(printm)
-                        messaging()
-                
+                        looping = False
 if __name__ == '__main__':
         main()
