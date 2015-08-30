@@ -146,6 +146,7 @@ def messaging():
                                         else: waitTime = ints
                                         continue
                                 if (len(s)==1):
+                                        big_audio_flag = False
                                         if (s=="'")or(s=='э'):
                                                 return(-1)
                                         if s=='+':
@@ -173,45 +174,32 @@ def messaging():
                                                 for vid in v.get('items'):
                                                         print(vid.get('player'))
                                                 continue
-                                        elif (s=='A')or(s=='Ф'):
-                                                m3u_flag=False
-                                                autor=input().lower()
-                                                if (autor=='m3u'):
-                                                        m3u_flag=True
-                                                        autor=input().lower()
-                                                auname=input().lower()
-                                                audio_list = call_api('audio.search', {'q': autor+' '+auname}, token_list[token_num]).get('items')
-                                                if m3u_flag:
-                                                        print('#EXTM3U')
-                                                        for audio in audio_list:
-                                                                url = audio.get('url')
-                                                                print('#EXTINF:'+str(audio.get('duration')), audio.get('artist')+' - '+audio.get('title'), sep=', ')
-                                                                print(url[:url.find('?extra')])                      
-                                                else:
-                                                        for audio in audio_list:
-                                                                if (audio.get('artist').lower()==autor)and(audio.get('title').lower()==auname):
-                                                                        url = audio.get('url')
-                                                                        print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id'))) 
-                                                continue
-                                        elif (s=='a')or(s=='ф'):
+                                        elif (s.lower()=='a')or(s.lower()=='ф'):
+                                                if (s=='A')or(s=='Ф'): big_audio_flag = True
                                                 m3u_flag=False
                                                 s=input()
                                                 if (s.lower()=='m3u'):
                                                         m3u_flag=True
                                                         s=input()
-                                                audio_list = call_api('audio.search', {'q': s}, token_list[token_num]).get('items')
+                                                if big_audio_flag:
+                                                        autitle=input()
+                                                        audio_list = call_api('audio.search', {'q': s+' '+autitle}, token_list[token_num]).get('items')
+                                                else:
+                                                        audio_list = call_api('audio.search', {'q': s}, token_list[token_num]).get('items')
                                                 print()
                                                 if m3u_flag:
-                                                        print('#EXTM3U')
+                                                        m3u_file = open('m3u.m3u', 'w', encoding='utf-8')
+                                                        m3u_file.write('#EXTM3U\n')
                                                         for audio in audio_list:
-                                                                url = audio.get('url')
-                                                                print('#EXTINF:'+str(audio.get('duration')), audio.get('artist')+' - '+audio.get('title'), sep=', ')
-                                                                print(url[:url.find('?extra')])                      
+                                                                url = audio.get('url')                
+                                                                m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+audio.get('artist')+' - '+audio.get('title')+'\n'+url[:url.find('?extra')]+'\n')
+                                                        m3u_file.close()
                                                 else:
                                                         for audio in audio_list:
-                                                                url = audio.get('url')
-                                                                print(audio.get('artist'),'-',audio.get('title'))
-                                                                print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id')))
+                                                                if (not big_audio_flag) or ((audio.get('artist').lower()==s)and(audio.get('title').lower()==autitle)):
+                                                                        url = audio.get('url')
+                                                                        if not big_audio_flag: print(audio.get('artist'),'-',audio.get('title'))
+                                                                        print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id')))
                                                 continue
                                         elif (s.lower()=='u')or(s.lower()=='г'):
                                                 s=input()
