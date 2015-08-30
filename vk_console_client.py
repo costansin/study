@@ -98,9 +98,23 @@ def print_attachments(attache, token):
                                         prints(type)
 
 def getHistory(N, offset, uid, token):
+        unread = False
         history = call_api('messages.getHistory', {'count': N, 'offset': offset, 'user_id': uid}, token).get('items')
+        message={'date': 0}
+        inoutchar = ''
         if history is not None:
                 for message in reversed(history):
+                        if (message.get('out')==0):
+                                if (inoutchar!='>'):
+                                        inoutchar='>'
+                                        prints(inoutchar)
+                        else:
+                                if (inoutchar!='<'):
+                                        inoutchar='<'
+                                        prints(inoutchar)
+                        if not unread and (message.get('read_state')==0):
+                                unread = True
+                                prints('_._')
                         prints(charfilter(message.get('body')))
                         print_attachments(message.get('attachments'), token)
                         fwd = message.get('fwd_messages')
@@ -108,7 +122,8 @@ def getHistory(N, offset, uid, token):
                                 prints('fwd_messages')
                                 for fwdm in fwd:
                                         prints(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
-                                        print_attachments(fwdm.get('attachments'), token) 
+                                        print_attachments(fwdm.get('attachments'), token)
+                prints(str(datetime.datetime.fromtimestamp(message.get('date'))))
 
 def messaging():
         global token_num, printm, waitTime
@@ -159,22 +174,44 @@ def messaging():
                                                         print(vid.get('player'))
                                                 continue
                                         elif (s=='A')or(s=='Ф'):
+                                                m3u_flag=False
                                                 autor=input().lower()
+                                                if (autor=='m3u'):
+                                                        m3u_flag=True
+                                                        autor=input().lower()
                                                 auname=input().lower()
                                                 audio_list = call_api('audio.search', {'q': autor+' '+auname}, token_list[token_num]).get('items')
-                                                for audio in audio_list:
-                                                        if (audio.get('artist').lower()==autor)and(audio.get('title').lower()==auname):
+                                                if m3u_flag:
+                                                        print('#EXTM3U')
+                                                        for audio in audio_list:
                                                                 url = audio.get('url')
-                                                                print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id'))) 
+                                                                print('#EXTINF:'+str(audio.get('duration')), audio.get('artist')+' - '+audio.get('title'), sep=', ')
+                                                                print(url[:url.find('?extra')])                      
+                                                else:
+                                                        for audio in audio_list:
+                                                                if (audio.get('artist').lower()==autor)and(audio.get('title').lower()==auname):
+                                                                        url = audio.get('url')
+                                                                        print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id'))) 
                                                 continue
                                         elif (s=='a')or(s=='ф'):
+                                                m3u_flag=False
                                                 s=input()
+                                                if (s.lower()=='m3u'):
+                                                        m3u_flag=True
+                                                        s=input()
                                                 audio_list = call_api('audio.search', {'q': s}, token_list[token_num]).get('items')
                                                 print()
-                                                for audio in audio_list:
-                                                        url = audio.get('url')
-                                                        print(audio.get('artist'),'-',audio.get('title'))
-                                                        print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id'))) 
+                                                if m3u_flag:
+                                                        print('#EXTM3U')
+                                                        for audio in audio_list:
+                                                                url = audio.get('url')
+                                                                print('#EXTINF:'+str(audio.get('duration')), audio.get('artist')+' - '+audio.get('title'), sep=', ')
+                                                                print(url[:url.find('?extra')])                      
+                                                else:
+                                                        for audio in audio_list:
+                                                                url = audio.get('url')
+                                                                print(audio.get('artist'),'-',audio.get('title'))
+                                                                print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id')))
                                                 continue
                                         elif (s.lower()=='u')or(s.lower()=='г'):
                                                 s=input()
