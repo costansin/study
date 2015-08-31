@@ -146,7 +146,6 @@ def messaging():
                                         else: waitTime = ints
                                         continue
                                 if (len(s)==1):
-                                        big_audio_flag = False
                                         if (s=="'")or(s=='э'):
                                                 return(-1)
                                         if s=='+':
@@ -175,7 +174,7 @@ def messaging():
                                                         print(vid.get('player'))
                                                 continue
                                         elif (s.lower()=='a')or(s.lower()=='ф'):
-                                                if (s=='A')or(s=='Ф'): big_audio_flag = True
+                                                big_audio_flag = (s=='A')or(s=='Ф')
                                                 m3u_flag=False
                                                 s=input()
                                                 if (s.lower()=='m3u'):
