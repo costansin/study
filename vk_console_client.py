@@ -28,7 +28,8 @@ def call_api(method, params, token):
         while True:
                 try:
                         result = requests.post(url, data=params).json()
-                        return result["response"] if "response" in result else result
+                        if 'error' not in result:
+                                return result["response"] if "response" in result else result
                 except:
                         print('error')
                         time.sleep(sleepTime)
@@ -93,7 +94,10 @@ def print_attachments(attache, token):
                                 url = stuff.get('url')
                                 if url is not None:
                                         urlf = url.find('?extra')        
-                                        prints(url[:urlf]) if (urlf!=-1) else prints(url)
+                                        if (urlf!=-1):
+                                                prints(stuff.get('artist')+' - '+stuff.get('title'))
+                                                prints(url[:urlf])
+                                        else: prints(url)
                                 else:
                                         prints(type)
 
@@ -104,6 +108,9 @@ def getHistory(N, offset, uid, token):
         inoutchar = ''
         if history is not None:
                 for message in reversed(history):
+                        if not unread and (message.get('read_state')==0):
+                                unread = True
+                                prints('_._')
                         if (message.get('out')==0):
                                 if (inoutchar!='>'):
                                         inoutchar='>'
@@ -112,9 +119,6 @@ def getHistory(N, offset, uid, token):
                                 if (inoutchar!='<'):
                                         inoutchar='<'
                                         prints(inoutchar)
-                        if not unread and (message.get('read_state')==0):
-                                unread = True
-                                prints('_._')
                         prints(charfilter(message.get('body')))
                         print_attachments(message.get('attachments'), token)
                         fwd = message.get('fwd_messages')
@@ -131,7 +135,7 @@ def messaging():
         while True:
                 m = ''
                 s = ''
-                userid = 0
+                userid = None
                 while (s=='')or((s[-1]!='#')and(s[-1]!='№')):
                         try:
                                 s=input()
@@ -226,18 +230,18 @@ def messaging():
                         sharp = s.find('#')
                         Nsign = s.find('№')
                         if (Nsign>=0)and((Nsign<sharp)or(sharp<0)): sharp = Nsign
-                        if userid==0:
+                        if userid is None:
                                 try:
                                         userstr = s[:sharp]
                                         s = s[sharp+1:]
                                         userid = mnemonics.get(userstr)
                                         if userid is None: userid = int(userstr)
                                 except:
-                                        print('message format: userid#multiple lines message#')
+                                        print('message format: userid#multi-line message#')
                                         continue
                         m+='\n'+s
                 m=m[:-1]
-                if (userid==0)or(userid is None): return(0)
+                if userid is None: return(0)
                 if userid<0:
                          call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}, token_list[token_num])
                 if (m=='\n')and(attachments is None):
