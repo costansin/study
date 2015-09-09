@@ -30,6 +30,8 @@ def call_api(method, params, token):
                         result = requests.post(url, data=params).json()
                         if 'error' not in result:
                                 return result["response"] if "response" in result else result
+                        else:
+                                time.sleep(sleepTime)
                 except:
                         print('error')
                         time.sleep(sleepTime)
@@ -296,9 +298,7 @@ def check_inbox():
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
                         xtype = x.get('type')
-                        if parent is None:
-                                prints('no_parent')
-                        else:
+                        if parent is not None:
                                 parent_id = parent.get('to_id')
                                 if parent_id is None:                
                                       if parent.get('post') is not None:
@@ -313,6 +313,8 @@ def check_inbox():
                                       prints('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
                                 else:
                                       prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+                                prints(parent.get('text'))
+                                print_attachments(parent.get('attachments'), mytoken)
                         feedback = x.get('feedback')
                         whos = feedback.get('items')
                         if whos is not None:
