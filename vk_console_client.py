@@ -20,6 +20,7 @@ ignore=[]
 token_num=0
 
 def call_api(method, params, token):
+        #print(method, params)
         #time.sleep(sleepTime)
         print('.', end='') if not looping else print('.')
         params["access_token"] = token
@@ -224,7 +225,10 @@ def messaging():
                                                 s=input()
                                                 suserid = mnemonics.get(s)
                                                 if suserid is None: suserid = int(s)
-                                                print(call_api('friends.add', {'user_id': suserid}, token_list[token_num]))
+                                                if (suserid>0):
+                                                        print(call_api('friends.add', {'user_id': suserid}, token_list[token_num]))
+                                                else:
+                                                        print(call_api('groups.join', {'groip_id': -suserid}, token_list[token_num]))
                                                 continue
                                         else:
                                                 print('incorrect symbol')
@@ -260,6 +264,7 @@ def messaging():
                         call_api('messages.send', {'user_id': userid, 'message': m, 'attachment': attachments}, token_list[token_num])
                         getHistory(10, 0, userid, token_list[token_num])
                         print(printm)
+                        printm = ''
                 print('Done')
 
 def check_inbox():
