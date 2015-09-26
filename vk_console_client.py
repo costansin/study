@@ -3,6 +3,7 @@ import requests
 import time
 import datetime
 import ast
+import re
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime = 1
@@ -33,8 +34,11 @@ def call_api(method, params, token):
                         if 'error' not in result:
                                 return result["response"] if "response" in result else result
                         else:
-                                print(result)
-                                time.sleep(sleepTime)
+                                print(result.get('error').get('error_msg'))
+                                try:
+                                        time.sleep(sleepTime)
+                                except KeyboardInterrupt:
+                                        return()
                 except:
                         print('error')
                         time.sleep(sleepTime)
@@ -52,9 +56,16 @@ def read_mnemonics():
                         result[key] = int(value)
         f.close()
         return result
+def rus_to_lat(wrong):
+        right = ''
+        for wrong_letter in wrong:
+                right_letter = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,._'['йцукенгшщзхъфывапролджэячсмитьбю_'.find(wrong_letter)]
+                right = right + right_letter
+        return right
 def mn(idstring):
         if idstring in mnemonics: return ['user_id', mnemonics[idstring]]
         elif idstring.isdigit(): return ['user_id', int(idstring)]
+        elif not re.match("^[' 'A-Za-z0-9_-]*$", idstring): return mn(rus_to_lat(idstring.lower()))
         else: return ['domain', idstring]
 def read_ignore():
         result = []
