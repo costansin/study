@@ -200,23 +200,25 @@ def messaging():
                                                 continue
                                         elif (s.lower()=='a')or(s.lower()=='ф'):
                                                 big_audio_flag = (s=='A')or(s=='Ф')
+                                                print('[M3U]\n[Number]\nAuthor\n[Title]') if big_audio_flag else print('[M3U]\n[Number]\nSearch string')
                                                 m3u_flag=False
                                                 s = cin()
                                                 if s is None: return(0)
+                                                if (s.lower()=='m3u'):
+                                                        m3u_flag=True
+                                                        s = cin()
+                                                        if s is None: return(0)
                                                 if s.isdigit():
                                                         au_count = int(s)
                                                         s = cin()
                                                         if s is None: return(0)
                                                 else:
-                                                        au_count = 1000
-                                                if (s.lower()=='m3u'):
-                                                        m3u_flag=True
-                                                        s = cin()
-                                                        if s is None: return(0)
+                                                        if m3u_flag: au_count = 1000
+                                                        else: au_count = 10
                                                 if big_audio_flag:
-                                                        s = cin()
-                                                        if s is None: return(0)
-                                                        autitle = s.strip()
+                                                        autitle = cin()
+                                                        if autitle is None: return(0)
+                                                        autitle = autitle.strip()
                                                 audio_list = []
                                                 AU_OFFSET_CONSTANT = 300
                                                 au_offset = 0
@@ -241,9 +243,9 @@ def messaging():
                                                         m3u_file.close()
                                                 else:
                                                         for audio in audio_list:
-                                                                if (not big_audio_flag) or ((audio.get('artist').lower()==s)and(audio.get('title').lower()==autitle)):
+                                                                if (not big_audio_flag) or ((audio.get('artist').lower()==s.lower())and((audio.get('title').lower()==autitle.lower())or(autitle==''))):
                                                                         url = audio.get('url')
-                                                                        if not big_audio_flag: print(audio.get('artist'),'-',audio.get('title'))
+                                                                        if not big_audio_flag or (autitle==''): print(audio.get('artist'),'-',audio.get('title'))
                                                                         print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id')))
                                                 continue
                                         elif (s.lower()=='u')or(s.lower()=='г'):
