@@ -83,38 +83,55 @@ def charfilter(s):
                 else: #sometimes -FC00, need fix: e.g. D83DDB52 -> D83CDF52
                         r+='vk.com/images/emoji/'+hex(ord(c)+3627804672).upper()[2:]+'_2x.png'
         return r
-def prints(s): #print(s)
+def prints(s):
         global printm
-        printm+=s+'\n'
+        printm+=s
+def printsn(s): #print(s)
+        prints(s+'\n')
 def print_attachments(attache, token):
         if attache is not None:
                 for attached in attache:
-                        type = attached.get('type')
-                        stuff = attached.get(type)
-                        if (type=='photo')or(type=='sticker'):
+                        atype = attached.get('type')
+                        cropf = atype.find('_')
+                        if cropf>=0: croptype = atype[:cropf]
+                        else: croptype = atype
+                        stuff = attached.get(atype)
+                        owner = stuff.get('owner_id')
+                        if owner is None: owner = stuff.get('to_id')
+                        cropadress = str(owner)+'_'+str(stuff.get('id'))
+                        adress = croptype + cropadress
+                        if (atype=='photo')or(atype=='sticker'):
                                 for size in photosizes:
                                         link=stuff.get('photo_'+str(size))
                                         if link is not None:
-                                                prints(link)
+                                                printsn(link)
                                                 break
-                        elif type=='video':
-                                req = str(stuff.get('owner_id'))+'_'+str(stuff.get('id'))+'_'+str(stuff.get('access_key'))
-                                prints(call_api('video.get', {'videos': req}, token).get('items')[0].get('player'))
-                        elif type=='wall':
-                                prints('vk.com/wall'+str(stuff.get('to_id'))+'_'+str(stuff.get('id')))
-                        elif type=='wall_reply':
-                                prints('vk.com/wall'+str(stuff.get('owner_id'))+'_'+str(stuff.get('id')))
-
+                        elif atype=='video':
+                                req = str(cropadress)+'_'+str(stuff.get('access_key'))
+                                printsn(call_api('video.get', {'videos': req}, token).get('items')[0].get('player'))
                         else:
                                 url = stuff.get('url')
                                 if url is not None:
                                         urlf = url.find('?extra')        
                                         if (urlf!=-1):
-                                                prints(stuff.get('artist')+' - '+stuff.get('title'))
-                                                prints(url[:urlf])
-                                        else: prints(url)
-                                else:
-                                        prints(type)
+                                                printsn(stuff.get('artist')+' - '+stuff.get('title'))
+                                                printsn(url[:urlf]+' ')
+                                        else: printsn(url+' ')
+                        printsn(adress+' ')
+def print_message(message, token, k):
+        body = message.get('body')
+        if body!='':
+                if message.get('emoji'): printsn(charfilter(body))
+                else: printsn(body)
+        print_attachments(message.get('attachments'), token)
+        fwd = message.get('fwd_messages')
+        if fwd is not None:
+                for i in range(0,k): prints('     ')
+                printsn('[fwd_messages:]')
+                for fwdm in fwd:
+                        for i in range(0,k+1): prints('     ')
+                        prints('['+str(fwdm.get('user_id'))+']')
+                        print_message(fwdm, token, k+1)                     
 def getHistory(count, offset, print_numbers, uid, token):
         if not isinstance(uid, int): uid = call_api('users.get', {'user_ids': uid}, token)[0].get('id')
         unread = False
@@ -125,27 +142,20 @@ def getHistory(count, offset, print_numbers, uid, token):
                 for message in reversed(history):
                         if not unread and (message.get('read_state')==0):
                                 unread = True
-                                prints('_._')
+                                printsn('_._')
                         if (message.get('out')==0):
                                 if (inoutchar!='>'):
                                         inoutchar='>'
-                                        prints(inoutchar)
+                                        printsn(inoutchar)
                         else:
                                 if (inoutchar!='<'):
                                         inoutchar='<'
-                                        prints(inoutchar)
+                                        printsn(inoutchar)
                         if print_numbers:
-                                prints('['+str(message.get('id'))+']')
-                        prints(charfilter(message.get('body'))) if message.get('emoji') else prints(message.get('body'))
-                        print_attachments(message.get('attachments'), token)
-                        fwd = message.get('fwd_messages')
-                        if fwd is not None:
-                                prints('fwd_messages')
-                                for fwdm in fwd:
-                                        prints(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
-                                        print_attachments(fwdm.get('attachments'), token)
+                                printsn('['+str(message.get('id'))+']')
+                        print_message(message, token, 0)
                         if print_numbers:
-                                prints('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
+                                printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
                 if not print_numbers: prints('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
 def messaging():
         global token_num, printm, waitTime
@@ -178,8 +188,8 @@ def messaging():
                                                         s = cin()
                                                         if s is None: return(0)
                                                         forward_messages = s
-                                                s = cin()
-                                                if s is None: return(0)
+                                                        s = cin()
+                                                        if s is None: return(0)
                                                 attachments = s
                                                 s=cin() #no continue for message
                                                 if s is None: return(0)
@@ -323,19 +333,13 @@ def messaging():
                                                 ids = cin()
                                                 if ids is None: return(0)
                                                 delete_list = call_api('messages.getById', {'message_ids': ids}, token_list[token_num]).get('items')
-                                                del_uid_strlist = ''
                                                 printm = ''
                                                 for mes in delete_list:                                                        
                                                         del_uid = str(mes.get('user_id'))
-                                                        del_uid_strlist = del_uid_strlist + del_uid + ','
-                                                        if (mes.get('out')==0): prints('>'+del_uid)
-                                                        else: prints('<'+del_uid)
-                                                        prints(charfilter(mes.get('body'))) if mes.get('emoji') else prints(mes.get('body'))
-                                                        print_attachments(mes.get('attachments'), token_list[token_num])
+                                                        if (mes.get('out')==0): printsn('>'+del_uid)
+                                                        else: printsn('<'+del_uid)
+                                                        print_message(mes, token_list[token_num], 0)
                                                 print(printm)
-                                                del_uids = call_api('users.get', {'user_ids': del_uid_strlist}, token_list[token_num])
-                                                for del_user_id in del_uids:
-                                                        print(del_user_id.get('first_name'), del_user_id.get('last_name'))
                                                 print('DELETE THESE MESSAGES?\nY\\N')
                                                 delete_confirmation = cin()
                                                 if delete_confirmation is None: return(0)
@@ -385,7 +389,6 @@ def messaging():
                         getHistory(10, 0, False, userid[1], token_list[token_num])
                         print(printm)
                         printm = ''
-                print('Done')
 def check_inbox():
         A=0
         global token_num
@@ -397,7 +400,7 @@ def check_inbox():
                 r = notif_resp.get('count')
                 t = resp.get('count')
                 A+=r+t
-                prints(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
+                printsn(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
                 items = resp.get('items')
                 if items:
                         for x in resp.get('items'):
@@ -411,7 +414,7 @@ def check_inbox():
                                                 t-=1
                                                 continue
                                         respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
-                                        prints(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                                        printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                         getHistory(N, 0, False, uid, mytoken)
                                 else:
                                         uid = 2000000000 + chat_id
@@ -420,10 +423,10 @@ def check_inbox():
                                                 t-=1
                                                 call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
                                         else:
-                                                prints(str(uid)+' chat '+str(N))
+                                                printsn(str(uid)+' chat '+str(N))
                                                 getHistory(N, 0, False, uid, mytoken)
                 if (t>0): token_num = index
-                prints("-------")
+                printsn("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
                         xtype = x.get('type')
@@ -439,10 +442,10 @@ def check_inbox():
                                       else:
                                               parent_id = parent.get('owner_id')
                                 if 'photo' in xtype:
-                                      prints('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
+                                      printsn('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
                                 else:
-                                      prints('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
-                                prints(parent.get('text'))
+                                      printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+                                printsn(parent.get('text'))
                                 print_attachments(parent.get('attachments'), mytoken)
                         feedback = x.get('feedback')
                         whos = feedback.get('items')
@@ -450,14 +453,14 @@ def check_inbox():
                                 for who in whos:
                                         whuid = who.get('from_id')
                                         whuidinfo = call_api('users.get', {'user_ids': whuid}, mytoken)[0]
-                                        prints(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
+                                        printsn(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
                         comment = feedback.get('text')
                         if comment is None:
-                                prints(xtype)
+                                printsn(xtype)
                         else:
-                                prints(charfilter(comment))
+                                printsn(charfilter(comment))
                                 print_attachments(feedback.get('attachments'), mytoken)
-                prints("_____________")
+                printsn("_____________")
         return(A) #messages+notifies of all tokens
 
 def main():
