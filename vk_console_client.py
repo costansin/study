@@ -126,7 +126,6 @@ def getHistory(count, offset, print_numbers, uid, token):
                         if not unread and (message.get('read_state')==0):
                                 unread = True
                                 prints('_._')
-                        if print_numbers: prints(str(message.get('id')))
                         if (message.get('out')==0):
                                 if (inoutchar!='>'):
                                         inoutchar='>'
@@ -135,6 +134,8 @@ def getHistory(count, offset, print_numbers, uid, token):
                                 if (inoutchar!='<'):
                                         inoutchar='<'
                                         prints(inoutchar)
+                        if print_numbers:
+                                prints('['+str(message.get('id'))+']')
                         prints(charfilter(message.get('body'))) if message.get('emoji') else prints(message.get('body'))
                         print_attachments(message.get('attachments'), token)
                         fwd = message.get('fwd_messages')
@@ -143,7 +144,9 @@ def getHistory(count, offset, print_numbers, uid, token):
                                 for fwdm in fwd:
                                         prints(str(fwdm.get('user_id'))+'#'+charfilter(fwdm.get('body')))
                                         print_attachments(fwdm.get('attachments'), token)
-                prints(str(datetime.datetime.fromtimestamp(message.get('date'))))
+                        if print_numbers:
+                                prints('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
+                if not print_numbers: prints('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
 def messaging():
         global token_num, printm, waitTime
         print('messaging, token is', token_num)
@@ -158,6 +161,7 @@ def messaging():
                         if (m==''):
                                 if (s==''): return(0)
                                 attachments = None
+                                forward_messages = None
                                 if s.isdigit():
                                         ints = int(s)
                                         if ints<10: token_num = ints
@@ -167,12 +171,19 @@ def messaging():
                                         if (s=="'")or(s=='э'):
                                                 return(-1)
                                         if s=='+':
+                                                print('[F\nforward messages ids (e.g. 1,3,17)]\nattachments (e.g. photo123_123)')
+                                                s = cin()
+                                                if s is None: return(0)
+                                                if (s.lower()=='f')or(s.lower()=='а'):
+                                                        s = cin()
+                                                        if s is None: return(0)
+                                                        forward_messages = s
                                                 s = cin()
                                                 if s is None: return(0)
                                                 attachments = s
                                                 s=cin() #no continue for message
                                                 if s is None: return(0)
-                                        elif (s.lower()=='n')or(s.lower()=='т'):
+                                        if (s.lower()=='n')or(s.lower()=='т'):
                                                 call_api('notifications.markAsViewed', {}, token_list[token_num])
                                                 print('Done')
                                                 continue
@@ -199,6 +210,10 @@ def messaging():
                                                         print(vid.get('player'))
                                                 continue
                                         elif (s.lower()=='a')or(s.lower()=='ф'):
+                                                if attachments is not None:
+                                                        add_owner_id, add_audio_id = attachments.split('_')
+                                                        print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}, token_list[token_num]))
+                                                        continue
                                                 big_audio_flag = (s=='A')or(s=='Ф')
                                                 print('[M3U]\n[Number]\nAuthor\n[Title]') if big_audio_flag else print('[M3U]\n[Number]\nSearch string')
                                                 m3u_flag=False
@@ -308,16 +323,24 @@ def messaging():
                                                 ids = cin()
                                                 if ids is None: return(0)
                                                 delete_list = call_api('messages.getById', {'message_ids': ids}, token_list[token_num]).get('items')
-                                                for mes in delete_list:
-                                                        print(mes.get('body'))
+                                                del_uid_strlist = ''
+                                                printm = ''
+                                                for mes in delete_list:                                                        
+                                                        del_uid = str(mes.get('user_id'))
+                                                        del_uid_strlist = del_uid_strlist + del_uid + ','
+                                                        if (mes.get('out')==0): prints('>'+del_uid)
+                                                        else: prints('<'+del_uid)
+                                                        prints(charfilter(mes.get('body'))) if mes.get('emoji') else prints(mes.get('body'))
+                                                        print_attachments(mes.get('attachments'), token_list[token_num])
+                                                print(printm)
+                                                del_uids = call_api('users.get', {'user_ids': del_uid_strlist}, token_list[token_num])
+                                                for del_user_id in del_uids:
+                                                        print(del_user_id.get('first_name'), del_user_id.get('last_name'))
                                                 print('DELETE THESE MESSAGES?\nY\\N')
                                                 delete_confirmation = cin()
                                                 if delete_confirmation is None: return(0)
                                                 if delete_confirmation.lower()=='y':
                                                         print(call_api('messages.delete', {'message_ids': ids}, token_list[token_num]))
-                                                continue
-                                        else:
-                                                print('incorrect symbol')
                                                 continue
                         sharp = s.find('#')
                         Nsign = s.find('№')
@@ -341,7 +364,7 @@ def messaging():
                          call_api('wall.post', {'owner_id': userid[1], 'from_group': 1, 'message': m, 'attachments': attachments}, token_list[token_num])
                          print('Done')
                          break
-                if (m=='\n')and(attachments is None):
+                if (m=='\n')and(attachments is None)and(forward_messages is None):
                         call_api('messages.markAsRead', {'peer_id': userid[1]}, token_list[token_num])
                         printm='\n'
                         getHistory(10, 0, False, userid[1], token_list[token_num])
@@ -356,9 +379,9 @@ def messaging():
                         print(printm)        
                 else:
                         if isinstance(userid[1],int) and (userid[1]>2000000000):
-                                call_api('messages.send', {'chat_id': userid[1]-2000000000, 'message': m, 'attachment': attachments}, token_list[token_num])
-                        else:
-                                call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments}, token_list[token_num])
+                                userid[0] = 'chat_id'
+                                userid[1] = userid[1]-2000000000
+                        call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages}, token_list[token_num])
                         getHistory(10, 0, False, userid[1], token_list[token_num])
                         print(printm)
                         printm = ''
