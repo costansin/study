@@ -15,17 +15,17 @@ photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
 token_file.close()
+token_num=1
 printm=''
 width=0
 height=0
 mnemonics={}
 ignore=[]
-token_num=1
-def call_api(method, params, token):
+def call_api(method, params):
         #print(method, params)
         #time.sleep(sleepTime)
         print('.', end='') if not looping else print(',', end='')
-        params["access_token"] = token
+        params["access_token"] = token_list[token_num]
         params["v"] = "5.35"
         url = "https://api.vk.com/method/" + method
         while True:
@@ -88,7 +88,7 @@ def prints(s):
         printm+=s
 def printsn(s): #print(s)
         prints(s+'\n')
-def print_attachments(attache, token):
+def print_attachments(attache):
         if attache is not None:
                 for attached in attache:
                         atype = attached.get('type')
@@ -108,7 +108,7 @@ def print_attachments(attache, token):
                                                 break
                         elif atype=='video':
                                 req = str(cropadress)+'_'+str(stuff.get('access_key'))
-                                printsn(call_api('video.get', {'videos': req}, token).get('items')[0].get('player'))
+                                printsn(call_api('video.get', {'videos': req}).get('items')[0].get('player'))
                         else:
                                 url = stuff.get('url')
                                 if url is not None:
@@ -118,12 +118,12 @@ def print_attachments(attache, token):
                                                 printsn(url[:urlf]+' ')
                                         else: printsn(url+' ')
                         printsn(adress+' ')
-def print_message(message, token, k):
+def print_message(message, k):
         body = message.get('body')
         if body!='':
                 if message.get('emoji'): printsn(charfilter(body))
                 else: printsn(body)
-        print_attachments(message.get('attachments'), token)
+        print_attachments(message.get('attachments'))
         fwd = message.get('fwd_messages')
         if fwd is not None:
                 for i in range(0,k): prints('     ')
@@ -131,11 +131,11 @@ def print_message(message, token, k):
                 for fwdm in fwd:
                         for i in range(0,k+1): prints('     ')
                         prints('['+str(fwdm.get('user_id'))+']')
-                        print_message(fwdm, token, k+1)                     
-def getHistory(count, offset, print_numbers, uid, token):
-        if not isinstance(uid, int): uid = call_api('users.get', {'user_ids': uid}, token)[0].get('id')
+                        print_message(fwdm, k+1)                     
+def getHistory(count, offset, print_numbers, uid):
+        if not isinstance(uid, int): uid = call_api('users.get', {'user_ids': uid})[0].get('id')
         unread = False
-        history = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid}, token).get('items')
+        history = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid}).get('items')
         message={'date': 0}
         inoutchar = ''
         if history is not None:
@@ -153,10 +153,10 @@ def getHistory(count, offset, print_numbers, uid, token):
                                         printsn(inoutchar)
                         if print_numbers:
                                 printsn('['+str(message.get('id'))+']')
-                        print_message(message, token, 0)
+                        print_message(message, 0)
                         if print_numbers:
                                 printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
-                if not print_numbers: prints('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
+                if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
 def messaging():
         global token_num, printm, waitTime
         print('messaging, token is', token_num)
@@ -194,13 +194,13 @@ def messaging():
                                                 s=cin() #no continue for message
                                                 if s is None: return(0)
                                         if (s.lower()=='n')or(s.lower()=='т'):
-                                                call_api('notifications.markAsViewed', {}, token_list[token_num])
+                                                call_api('notifications.markAsViewed', {})
                                                 print('Done')
                                                 continue
                                         elif (s.lower()=='t')or(s.lower()=='е'):
                                                 s = cin()
                                                 if s is None: return(0)
-                                                lit = ast.literal_eval(s)+(token_list[token_num],)
+                                                lit = ast.literal_eval(s)
                                                 g = call_api(*lit)
                                                 print(charfilter(str(g)))
                                                 continue
@@ -209,12 +209,12 @@ def messaging():
                                                 if s is None: return(0)
                                                 lobjecttype, what = s.split()
                                                 lowner, lid = what.split('_') #ifLiked - likes.delete
-                                                print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}, token_list[token_num]))
+                                                print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                                 continue
                                         elif (s.lower()=='v')or(s.lower()=='м'):
                                                 s = cin()
                                                 if s is None: return(0)
-                                                v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long'}, token_list[token_num])
+                                                v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long'})
                                                 for vid in v.get('items'):
                                                         print(vid.get('title'))
                                                         print(vid.get('player'))
@@ -222,7 +222,7 @@ def messaging():
                                         elif (s.lower()=='a')or(s.lower()=='ф'):
                                                 if attachments is not None:
                                                         add_owner_id, add_audio_id = attachments.split('_')
-                                                        print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}, token_list[token_num]))
+                                                        print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
                                                         continue
                                                 big_audio_flag = (s=='A')or(s=='Ф')
                                                 print('[M3U]\n[Number]\nAuthor\n[Title]') if big_audio_flag else print('[M3U]\n[Number]\nSearch string')
@@ -250,11 +250,11 @@ def messaging():
                                                 while au_count>0:
                                                         if big_audio_flag:
                                                                 if autitle=='':
-                                                                        audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1}, token_list[token_num]).get('items')
+                                                                        audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1}).get('items')
                                                                 else:
-                                                                        audio_list = audio_list + call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}, token_list[token_num]).get('items')
+                                                                        audio_list = audio_list + call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
                                                         else:
-                                                                audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}, token_list[token_num]).get('items')
+                                                                audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
                                                         au_offset = au_offset + AU_OFFSET_CONSTANT
                                                         au_count = au_count - AU_OFFSET_CONSTANT
                                                         print(len(audio_list), end='')
@@ -277,9 +277,9 @@ def messaging():
                                                 s = cin()
                                                 if s is None: return(0)
                                                 suserid = mn(s)
-                                                info = call_api('users.get', {'user_ids': suserid[1]}, token_list[token_num])[0]
+                                                info = call_api('users.get', {'user_ids': suserid[1]})[0]
                                                 print(info)
-                                                actif = call_api('messages.getLastActivity', {'user_id': info.get('id')}, token_list[token_num])
+                                                actif = call_api('messages.getLastActivity', {'user_id': info.get('id')})
                                                 onstatus = 'online' if actif.get('online') else 'offline'
                                                 print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
                                                 continue
@@ -287,16 +287,16 @@ def messaging():
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s=='':
-                                                        friend_id_list = call_api('friends.getRecent', {'count': 1000}, token_list[token_num])
-                                                        friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]}, token_list[token_num])
+                                                        friend_id_list = call_api('friends.getRecent', {'count': 1000})
+                                                        friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
                                                         for friend in friend_list:
                                                                 print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
                                                 else:
                                                         suserid = mn(s)
                                                         if (isinstance(suserid[1],int))and(suserid[1]<0):
-                                                                print(call_api('groups.join', {'group_id': -suserid[1]}, token_list[token_num]))
+                                                                print(call_api('groups.join', {'group_id': -suserid[1]}))
                                                         else:
-                                                                print(call_api('friends.add', {'user_ids': suserid[1]}, token_list[token_num])) #domain unavailable
+                                                                print(call_api('friends.add', {'user_ids': suserid[1]})) #domain unavailable
                                                 continue
                                         elif (s.lower()=='w')or(s.lower()=='ы'):
                                                 wall_flag = True
@@ -325,26 +325,26 @@ def messaging():
                                                         hcount, hoffset, hprint_numbers, huid = input(), input(), input(), input()
                                                 except KeyboardInterrupt:
                                                         return(0)
-                                                getHistory(hcount, hoffset, hprint_numbers, huid, token_list[token_num])
+                                                getHistory(hcount, hoffset, hprint_numbers, huid)
                                                 print(printm)
                                                 continue
                                         elif (s.lower()=='d')or(s.lower()=='в'):
                                                 print('DELETE MESSAGES BY IDS.\nInput message ids, separated with commas.')
                                                 ids = cin()
                                                 if ids is None: return(0)
-                                                delete_list = call_api('messages.getById', {'message_ids': ids}, token_list[token_num]).get('items')
+                                                delete_list = call_api('messages.getById', {'message_ids': ids}).get('items')
                                                 printm = ''
                                                 for mes in delete_list:                                                        
                                                         del_uid = str(mes.get('user_id'))
                                                         if (mes.get('out')==0): printsn('>'+del_uid)
                                                         else: printsn('<'+del_uid)
-                                                        print_message(mes, token_list[token_num], 0)
+                                                        print_message(mes, 0)
                                                 print(printm)
                                                 print('DELETE THESE MESSAGES?\nY\\N')
                                                 delete_confirmation = cin()
                                                 if delete_confirmation is None: return(0)
                                                 if delete_confirmation.lower()=='y':
-                                                        print(call_api('messages.delete', {'message_ids': ids}, token_list[token_num]))
+                                                        print(call_api('messages.delete', {'message_ids': ids}))
                                                 continue
                         sharp = s.find('#')
                         Nsign = s.find('№')
@@ -360,43 +360,44 @@ def messaging():
                         m+='\n'+s
                 m=m[:-1]
                 if wall_flag:
-                        call_api('wall.post', {'message': m, 'attachments': attachments}, token_list[token_num])
+                        call_api('wall.post', {'message': m, 'attachments': attachments})
                         print('Done')
                         break
                 if userid is None: return(0)
                 if isinstance(userid[1],int) and (userid[1]<0):
-                         call_api('wall.post', {'owner_id': userid[1], 'from_group': 1, 'message': m, 'attachments': attachments}, token_list[token_num])
+                         call_api('wall.post', {'owner_id': userid[1], 'from_group': 1, 'message': m, 'attachments': attachments})
                          print('Done')
                          break
                 if (m=='\n')and(attachments is None)and(forward_messages is None):
-                        call_api('messages.markAsRead', {'peer_id': userid[1]}, token_list[token_num])
+                        call_api('messages.markAsRead', {'peer_id': userid[1]})
                         printm='\n'
-                        getHistory(10, 0, False, userid[1], token_list[token_num])
+                        getHistory(10, 0, False, userid[1])
                         print(printm)
                 elif (m=='\n#')or(m=='\n№'):
                         printm='\n'
-                        getHistory(200, 0, False, userid[1], token_list[token_num])
+                        getHistory(200, 0, False, userid[1])
                         print(printm)
                 elif (m=='\n##')or(m=='\n№№')or(m=='\n#№')or(m=='\n№#'):
                         printm='\n'
-                        getHistory(200, 0, True, userid[1], token_list[token_num])
+                        getHistory(200, 0, True, userid[1])
                         print(printm)        
                 else:
                         if isinstance(userid[1],int) and (userid[1]>2000000000):
                                 userid[0] = 'chat_id'
                                 userid[1] = userid[1]-2000000000
-                        call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages}, token_list[token_num])
-                        getHistory(10, 0, False, userid[1], token_list[token_num])
+                        call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages})
+                        getHistory(10, 0, False, userid[1])
                         print(printm)
                         printm = ''
 def check_inbox():
         A=0
         global token_num
-        for index, mytoken in enumerate(token_list):
-                myname = call_api('users.get', {}, mytoken)[0]
-                viewed_time = call_api('notifications.get',{'count': '0'}, mytoken).get('last_viewed')
-                notif_resp = call_api('notifications.get',{'start_time': viewed_time}, mytoken)
-                resp = call_api('messages.getDialogs', {'unread': '1'}, mytoken)
+        index = 0
+        for token_num in range(0,len(token_list)):
+                myname = call_api('users.get', {})[0]
+                viewed_time = call_api('notifications.get',{'count': '0'}).get('last_viewed')
+                notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                resp = call_api('messages.getDialogs', {'unread': '1'})
                 r = notif_resp.get('count')
                 t = resp.get('count')
                 A+=r+t
@@ -413,20 +414,21 @@ def check_inbox():
                                                 A-=1
                                                 t-=1
                                                 continue
-                                        respname = call_api('users.get', {'user_ids': uid}, mytoken)[0]
+                                        respname = call_api('users.get', {'user_ids': uid})[0]
                                         printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
-                                        getHistory(N, 0, False, uid, mytoken)
+                                        getHistory(N, 0, False, uid)
                                 else:
                                         uid = 2000000000 + chat_id
                                         if uid in ignore:
                                                 A-=1
                                                 t-=1
-                                                call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}, mytoken) #autoread
+                                                call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}) #autoread
                                         else:
                                                 printsn(str(uid)+' chat '+str(N))
-                                                getHistory(N, 0, False, uid, mytoken)
-                if (t>0): token_num = index
-                printsn("-------")
+                                                getHistory(N, 0, False, uid)
+                if (t>0):
+                        index = token_num
+                        printsn("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
                         xtype = x.get('type')
@@ -446,23 +448,23 @@ def check_inbox():
                                 else:
                                       printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                                 printsn(parent.get('text'))
-                                print_attachments(parent.get('attachments'), mytoken)
+                                print_attachments(parent.get('attachments'))
                         feedback = x.get('feedback')
                         whos = feedback.get('items')
                         if whos is not None:
                                 for who in whos:
                                         whuid = who.get('from_id')
-                                        whuidinfo = call_api('users.get', {'user_ids': whuid}, mytoken)[0]
+                                        whuidinfo = call_api('users.get', {'user_ids': whuid})[0]
                                         printsn(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
                         comment = feedback.get('text')
                         if comment is None:
                                 printsn(xtype)
                         else:
                                 printsn(charfilter(comment))
-                                print_attachments(feedback.get('attachments'), mytoken)
+                                print_attachments(feedback.get('attachments'))
                 printsn("_____________")
+        token_num = index
         return(A) #messages+notifies of all tokens
-
 def main():
         global printm, mnemonics, ignore, waitTime, looping
         mnemonics = read_mnemonics()
