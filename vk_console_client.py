@@ -15,7 +15,7 @@ photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
 token_file.close()
-token_num=1
+token_num=0
 printm=''
 width=0
 height=0
@@ -30,17 +30,17 @@ def call_api(method, params):
         url = "https://api.vk.com/method/" + method
         while True:
                 try:
-                        result = requests.post(url, data=params).json()
+                        try:
+                                result = requests.post(url, data=params).json()
+                        except KeyboardInterrupt:
+                                return()
                         if 'error' not in result:
                                 return result["response"] if "response" in result else result
                         else:
                                 print(result.get('error').get('error_msg'))
-                                try:
-                                        time.sleep(sleepTime)
-                                except KeyboardInterrupt:
-                                        return()
+                                time.sleep(sleepTime)
                 except:
-                        print('error')
+                        print('E', end='')
                         time.sleep(sleepTime)
 def cin():
         try:
@@ -125,9 +125,10 @@ def print_message(message, k):
                 else: printsn(body)
         print_attachments(message.get('attachments'))
         fwd = message.get('fwd_messages')
+        tab = ''
+        for i in range(0,k): tab = tab + '     '
         if fwd is not None:
-                for i in range(0,k): prints('     ')
-                printsn('[fwd_messages:]')
+                printsn(tab+'[fwd_messages:]')
                 for fwdm in fwd:
                         for i in range(0,k+1): prints('     ')
                         prints('['+str(fwdm.get('user_id'))+']')
@@ -135,7 +136,10 @@ def print_message(message, k):
 def getHistory(count, offset, print_numbers, uid):
         if not isinstance(uid, int): uid = call_api('users.get', {'user_ids': uid})[0].get('id')
         unread = False
-        history = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid}).get('items')
+        try:
+                history = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid}).get('items')
+        except:
+                return(0)
         message={'date': 0}
         inoutchar = ''
         if history is not None:
@@ -296,13 +300,22 @@ def messaging():
                                                         if (isinstance(suserid[1],int))and(suserid[1]<0):
                                                                 print(call_api('groups.join', {'group_id': -suserid[1]}))
                                                         else:
-                                                                print(call_api('friends.add', {'user_ids': suserid[1]})) #domain unavailable
+                                                                print(call_api('friends.add', {'user_id': suserid[1]})) #domain unavailable
                                                 continue
                                         elif (s.lower()=='w')or(s.lower()=='ы'):
                                                 wall_flag = True
                                                 userid = 0
                                                 s = cin()
                                                 if s is None: return(0)
+                                        elif (s.lower()=='r')or(s.lower()=='к'):
+                                                resmes = call_api('messages.getDialogs', {'unread': '1'}).get('items')
+                                                if (resmes == []):
+                                                        print('-')
+                                                else:
+                                                        for mes in resmes:
+                                                                m = mes.get('message')
+                                                                print(m.get('user_id'), mes.get('unread'), '#'+m.get('body'))
+                                                continue
                                         elif (s.lower()=='i')or(s.lower()=='ш'):
                                                 print(ignore)
                                                 s = cin()
@@ -373,14 +386,17 @@ def messaging():
                         printm='\n'
                         getHistory(10, 0, False, userid[1])
                         print(printm)
+                        printm = ''
                 elif (m=='\n#')or(m=='\n№'):
                         printm='\n'
                         getHistory(200, 0, False, userid[1])
                         print(printm)
+                        printm = ''
                 elif (m=='\n##')or(m=='\n№№')or(m=='\n#№')or(m=='\n№#'):
                         printm='\n'
                         getHistory(200, 0, True, userid[1])
-                        print(printm)        
+                        print(printm)
+                        printm = ''
                 else:
                         if isinstance(userid[1],int) and (userid[1]>2000000000):
                                 userid[0] = 'chat_id'
@@ -393,13 +409,17 @@ def check_inbox():
         A=0
         global token_num
         index = 0
+        prev_token_num = token_num
         for token_num in range(0,len(token_list)):
-                myname = call_api('users.get', {})[0]
-                viewed_time = call_api('notifications.get',{'count': '0'}).get('last_viewed')
-                notif_resp = call_api('notifications.get',{'start_time': viewed_time})
-                resp = call_api('messages.getDialogs', {'unread': '1'})
-                r = notif_resp.get('count')
-                t = resp.get('count')
+                try:
+                        myname = call_api('users.get', {})[0]
+                        viewed_time = call_api('notifications.get',{'count': '0'}).get('last_viewed')
+                        notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                        resp = call_api('messages.getDialogs', {'unread': '1'})
+                        r = notif_resp.get('count')
+                        t = resp.get('count')
+                except:
+                        return(0)
                 A+=r+t
                 printsn(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
                 items = resp.get('items')
@@ -427,7 +447,6 @@ def check_inbox():
                                                 printsn(str(uid)+' chat '+str(N))
                                                 getHistory(N, 0, False, uid)
                 if (t>0):
-                        index = token_num
                         printsn("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
@@ -463,7 +482,7 @@ def check_inbox():
                                 printsn(charfilter(comment))
                                 print_attachments(feedback.get('attachments'))
                 printsn("_____________")
-        token_num = index
+        token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
         global printm, mnemonics, ignore, waitTime, looping
