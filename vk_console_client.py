@@ -4,6 +4,7 @@ import time
 import datetime
 import ast
 import re
+import urllib.request
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime = 1
@@ -15,12 +16,13 @@ photosizes = [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64]
 token_file = open('token_file.txt', 'r') 
 token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
 token_file.close()
-token_num=0
 printm=''
 width=0
 height=0
 mnemonics={}
 ignore=[]
+idscash =[]
+lastNviewcash=[]
 def call_api(method, params):
         #print(method, params)
         #time.sleep(sleepTime)
@@ -42,6 +44,10 @@ def call_api(method, params):
                 except:
                         print('E', end='')
                         time.sleep(sleepTime)
+for token_num in range(len(token_list)):
+        idscash = idscash + [call_api('users.get', {})[0]]
+        lastNviewcash = lastNviewcash + [call_api('notifications.get',{'count': '0'}).get('last_viewed')]
+token_num = 0
 def cin():
         try:
                 s = input()
@@ -53,7 +59,7 @@ def read_mnemonics():
         with open(mnemofile) as f:
                 for line in f:
                         key, value = line.split()
-                        result[key] = int(value)
+                        result[key] = value
         f.close()
         return result
 def rus_to_lat(wrong):
@@ -64,7 +70,7 @@ def rus_to_lat(wrong):
         return right
 def mn(idstring):
         if idstring in mnemonics: return ['user_id', mnemonics[idstring]]
-        elif idstring.isdigit(): return ['user_id', int(idstring)]
+        elif idstring.isdigit(): return ['user_id', idstring]
         elif not re.match("^[' 'A-Za-z0-9_-]*$", idstring): return mn(rus_to_lat(idstring.lower()))
         else: return ['domain', idstring]
 def read_ignore():
@@ -199,7 +205,23 @@ def messaging():
                                                 if s is None: return(0)
                                         if (s.lower()=='n')or(s.lower()=='т'):
                                                 call_api('notifications.markAsViewed', {})
+                                                lastNviewcash[token_num] = int(time.time())
                                                 print('Done')
+                                                continue
+                                        elif (s.lower()=='e')or(s.lower()=='у'):                #rasp.yandex.ru/search/suburban/?
+                                                x = urllib.request.urlopen('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').read().decode('utf-8')
+                                                #x = requests.get('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').text
+                                                print(x[x.find('<title>')+7:x.find('</title>')])
+                                                l2 = [x[m.start()-5:m.start()] for m in re.finditer(':00&', x)]
+                                                l3 = list(map(lambda x, y: x+' - '+y, l2[::2], l2[1::2]))
+                                                for r in l3: print(r)
+                                                continue
+                                        elif (s.lower()=='s')or(s.lower()=='ы'):
+                                                s = cin()
+                                                if s is None: return(0)
+                                                if s.find('http')!=0: s='http://'+s
+                                                x = requests.get(s)
+                                                print(x.text)
                                                 continue
                                         elif (s.lower()=='t')or(s.lower()=='е'):
                                                 s = cin()
@@ -297,8 +319,8 @@ def messaging():
                                                                 print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
                                                 else:
                                                         suserid = mn(s)
-                                                        if (isinstance(suserid[1],int))and(suserid[1]<0):
-                                                                print(call_api('groups.join', {'group_id': -suserid[1]}))
+                                                        if suserid[1][0]=='-':
+                                                                print(call_api('groups.join', {'group_id': suserid[1][1:]}))
                                                         else:
                                                                 print(call_api('friends.add', {'user_id': suserid[1]})) #domain unavailable
                                                 continue
@@ -313,8 +335,8 @@ def messaging():
                                                         print('-')
                                                 else:
                                                         for mes in resmes:
-                                                                m = mes.get('message')
-                                                                print(m.get('user_id'), mes.get('unread'), '#'+m.get('body'))
+                                                                rm = mes.get('message')
+                                                                print(rm.get('user_id'), mes.get('unread'), '#'+charfilter(rm.get('body')))
                                                 continue
                                         elif (s.lower()=='i')or(s.lower()=='ш'):
                                                 print(ignore)
@@ -392,28 +414,29 @@ def messaging():
                         getHistory(200, 0, False, userid[1])
                         print(printm)
                         printm = ''
-                elif (m=='\n##')or(m=='\n№№')or(m=='\n#№')or(m=='\n№#'):
-                        printm='\n'
-                        getHistory(200, 0, True, userid[1])
-                        print(printm)
-                        printm = ''
                 else:
-                        if isinstance(userid[1],int) and (userid[1]>2000000000):
-                                userid[0] = 'chat_id'
-                                userid[1] = userid[1]-2000000000
-                        call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages})
-                        getHistory(10, 0, False, userid[1])
-                        print(printm)
-                        printm = ''
+                        resh = re.match('\n[#|№]+', m)
+                        if resh:
+                                getHistory(200, (resh.endpos-3)*200, True, userid[1])
+                                print(printm)
+                                printm = ''
+                        else:
+                                if isinstance(userid[1],int) and (userid[1]>2000000000):
+                                        userid[0] = 'chat_id'
+                                        userid[1] = userid[1]-2000000000
+                                call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages})
+                                getHistory(10, 0, False, userid[1])
+                                print(printm)
+                                printm = ''
 def check_inbox():
         A=0
         global token_num
         index = 0
         prev_token_num = token_num
-        for token_num in range(0,len(token_list)):
+        for token_num in range(len(token_list)):
                 try:
-                        myname = call_api('users.get', {})[0]
-                        viewed_time = call_api('notifications.get',{'count': '0'}).get('last_viewed')
+                        myname = idscash[token_num]
+                        viewed_time = lastNviewcash[token_num]
                         notif_resp = call_api('notifications.get',{'start_time': viewed_time})
                         resp = call_api('messages.getDialogs', {'unread': '1'})
                         r = notif_resp.get('count')
@@ -429,7 +452,7 @@ def check_inbox():
                                 mes = x.get('message')
                                 chat_id = mes.get('chat_id')
                                 if chat_id is None: #check dialogue is not a chat
-                                        uid = mes.get('user_id')
+                                        uid = str(mes.get('user_id'))
                                         if uid in ignore:
                                                 A-=1
                                                 t-=1
@@ -439,7 +462,7 @@ def check_inbox():
                                         getHistory(N, 0, False, uid)
                                 else:
                                         uid = 2000000000 + chat_id
-                                        if uid in ignore:
+                                        if str(uid) in ignore:
                                                 A-=1
                                                 t-=1
                                                 call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}) #autoread
