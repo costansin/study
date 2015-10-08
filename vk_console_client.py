@@ -4,6 +4,7 @@ import time
 import datetime
 import ast
 import re
+import random
 import urllib.request
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
@@ -21,8 +22,9 @@ width=0
 height=0
 mnemonics={}
 ignore=[]
-idscash =[]
+idscash=[]
 lastNviewcash=[]
+prob=[]
 def call_api(method, params):
         #print(method, params)
         #time.sleep(sleepTime)
@@ -30,23 +32,33 @@ def call_api(method, params):
         params["access_token"] = token_list[token_num]
         params["v"] = "5.35"
         url = "https://api.vk.com/method/" + method
+        er = False
+        E = False
         while True:
                 try:
                         try:
                                 result = requests.post(url, data=params).json()
+                                er = False
+                                E = False
                         except KeyboardInterrupt:
                                 return()
                         if 'error' not in result:
                                 return result["response"] if "response" in result else result
                         else:
-                                print(result.get('error').get('error_msg'))
+                                if not er:
+                                        print(result.get('error').get('error_msg'))
+                                        er = True
                                 time.sleep(sleepTime)
                 except:
-                        print('E', end='')
+                        if not E:
+                                print('E', end='')
+                                E = True
                         time.sleep(sleepTime)
 for token_num in range(len(token_list)):
         idscash = idscash + [call_api('users.get', {})[0]]
         lastNviewcash = lastNviewcash + [call_api('notifications.get',{'count': '0'}).get('last_viewed')]
+        prob=prob+[1]
+print()
 token_num = 0
 def cin():
         try:
@@ -87,7 +99,8 @@ def charfilter(s):
                 if ord(c)<65536:
                         r+=c
                 else: #sometimes -FC00, need fix: e.g. D83DDB52 -> D83CDF52
-                        r+='vk.com/images/emoji/'+hex(ord(c)+3627804672).upper()[2:]+'_2x.png'
+                        #r+='vk.com/images/emoji/'+hex(ord(c)+3627804672).upper()[2:]+'_2x.png'
+                        r+='&#'+str(ord(c))+';'
         return r
 def prints(s):
         global printm
@@ -169,7 +182,7 @@ def getHistory(count, offset, print_numbers, uid):
                 if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
 def messaging():
         global token_num, printm, waitTime
-        print('messaging, token is', token_num)
+        print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+':')
         while True:
                 m = ''
                 s = ''
@@ -184,7 +197,9 @@ def messaging():
                                 forward_messages = None
                                 if s.isdigit():
                                         ints = int(s)
-                                        if ints<10: token_num = ints
+                                        if ints<10:
+                                                token_num = ints
+                                                print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+':')
                                         else: waitTime = ints
                                         continue
                                 if (len(s)==1):
@@ -207,6 +222,11 @@ def messaging():
                                                 call_api('notifications.markAsViewed', {})
                                                 lastNviewcash[token_num] = int(time.time())
                                                 print('Done')
+                                                continue
+                                        elif (s.lower()=='p')or(s.lower()=='з'):
+                                                print('Set probabilities of token_nums while checkbox')
+                                                global prob
+                                                prob = [float(input()) for i in range(len(token_list))]
                                                 continue
                                         elif (s.lower()=='e')or(s.lower()=='у'):                #rasp.yandex.ru/search/suburban/?
                                                 x = urllib.request.urlopen('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').read().decode('utf-8')
@@ -434,6 +454,7 @@ def check_inbox():
         index = 0
         prev_token_num = token_num
         for token_num in range(len(token_list)):
+                if random.random() > prob[token_num]: continue
                 try:
                         myname = idscash[token_num]
                         viewed_time = lastNviewcash[token_num]
