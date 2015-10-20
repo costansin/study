@@ -38,15 +38,19 @@ def call_api(method, params):
                 try:
                         try:
                                 result = requests.post(url, data=params).json()
-                                er = False
                                 E = False
                         except KeyboardInterrupt:
                                 return()
                         if 'error' not in result:
                                 return result["response"] if "response" in result else result
+                                er = False
                         else:
                                 if not er:
-                                        print(result.get('error').get('error_msg'))
+                                        err = result.get('error')
+                                        msg = err.get('error_msg')
+                                        print(msg)
+                                        if msg.find('Validation')>=0:
+                                                print(err.get('redirect_uri'))
                                         er = True
                                 time.sleep(sleepTime)
                 except:
@@ -206,16 +210,11 @@ def messaging():
                                         if (s=="'")or(s=='э'):
                                                 return(-1)
                                         if s=='+':
-                                                print('[F\nforward messages ids (e.g. 1,3,17)]\nattachments (e.g. photo123_123)')
+                                                #print('[forward messages ids (e.g. 1232,1233,1237) | attachments (e.g. photo123123_123223,audio-34232_23123)]')
                                                 s = cin()
                                                 if s is None: return(0)
-                                                if (s.lower()=='f')or(s.lower()=='а'):
-                                                        s = cin()
-                                                        if s is None: return(0)
-                                                        forward_messages = s
-                                                        s = cin()
-                                                        if s is None: return(0)
-                                                attachments = s
+                                                if s[0].isdigit(): forward_messages = s
+                                                else: attachments = s
                                                 s=cin() #no continue for message
                                                 if s is None: return(0)
                                         if (s.lower()=='n')or(s.lower()=='т'):
@@ -251,6 +250,7 @@ def messaging():
                                                 print(charfilter(str(g)))
                                                 continue
                                         elif (s.lower()=='l')or(s.lower()=='д'):
+                                                print('type owner_id\ntypes:\npost comment photo audio video note photo_comment video_comment topic_comment sitepage')
                                                 s = cin()
                                                 if s is None: return(0)
                                                 lobjecttype, what = s.split()
@@ -271,7 +271,7 @@ def messaging():
                                                         print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
                                                         continue
                                                 big_audio_flag = (s=='A')or(s=='Ф')
-                                                print('[M3U]\n[Number]\nAuthor\n[Title]') if big_audio_flag else print('[M3U]\n[Number]\nSearch string')
+                                                print('[M3U]\n[Number]\n[Author]\n[Title]') if big_audio_flag else print('[M3U]\n[Number]\n[Search string]')
                                                 m3u_flag=False
                                                 s = cin()
                                                 if s is None: return(0)
@@ -294,13 +294,16 @@ def messaging():
                                                 AU_OFFSET_CONSTANT = 300
                                                 au_offset = 0
                                                 while au_count>0:
-                                                        if big_audio_flag:
-                                                                if autitle=='':
-                                                                        audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1}).get('items')
-                                                                else:
-                                                                        audio_list = audio_list + call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                        if s.strip()=='':
+                                                                audio_list = audio_list + call_api('audio.get', {'owner_id': idscash[token_num].get('id'), 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
                                                         else:
-                                                                audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                                if big_audio_flag:
+                                                                        if autitle=='':
+                                                                                audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1}).get('items')
+                                                                        else:
+                                                                                audio_list = audio_list + call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                                else:
+                                                                        audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
                                                         au_offset = au_offset + AU_OFFSET_CONSTANT
                                                         au_count = au_count - AU_OFFSET_CONSTANT
                                                         print(len(audio_list), end='')
@@ -413,16 +416,21 @@ def messaging():
                                         print('message format: userid#multi-line message#')
                                         continue
                         m+='\n'+s
+                        if m=='\n':
+                                break
                 m=m[:-1]
                 if wall_flag:
                         call_api('wall.post', {'message': m, 'attachments': attachments})
                         print('Done')
                         break
                 if userid is None: return(0)
-                if isinstance(userid[1],int) and (userid[1]<0):
+                if (userid[1][0]=='-'):
                          call_api('wall.post', {'owner_id': userid[1], 'from_group': 1, 'message': m, 'attachments': attachments})
                          print('Done')
                          break
+                if (m==''):
+                        call_api('messages.markAsRead', {'peer_id': userid[1]})
+                        return(-1)
                 if (m=='\n')and(attachments is None)and(forward_messages is None):
                         call_api('messages.markAsRead', {'peer_id': userid[1]})
                         printm='\n'
@@ -444,10 +452,13 @@ def messaging():
                                 if isinstance(userid[1],int) and (userid[1]>2000000000):
                                         userid[0] = 'chat_id'
                                         userid[1] = userid[1]-2000000000
+                                out_flag = (m[-1]=='#')or(m[-1]=='№')
+                                if out_flag: m=m[:-1]
                                 call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages})
                                 getHistory(10, 0, False, userid[1])
                                 print(printm)
                                 printm = ''
+                                if out_flag: return(-1)
 def check_inbox():
         A=0
         global token_num
