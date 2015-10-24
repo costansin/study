@@ -3,6 +3,7 @@ import requests
 import time
 import datetime
 import ast
+import os
 import re
 import random
 import urllib.request
@@ -25,6 +26,7 @@ ignore=[]
 idscash=[]
 lastNviewcash=[]
 prob=[]
+smileys = os.listdir('smileys')
 def call_api(method, params):
         #print(method, params)
         #time.sleep(sleepTime)
@@ -97,14 +99,20 @@ def read_ignore():
                         result.append(mn(line)[1])
         f.close()
         return result
+def smiley_hex(c, sh):
+        return hex(ord(c)+sh).upper()[2:]+'.png'
 def charfilter(s):
         r=''
         for c in s:
-                if ord(c)<65536:
-                        r+=c
-                else: #sometimes -FC00, need fix: e.g. D83DDB52 -> D83CDF52
-                        #r+='vk.com/images/emoji/'+hex(ord(c)+3627804672).upper()[2:]+'_2x.png'
-                        r+='&#'+str(ord(c))+';'
+                if ord(c)<8617: r+=c
+                else:
+                        h72 = smiley_hex(c,3627804672)
+                        h60 = smiley_hex(c,3627740160)
+                        h0 = smiley_hex(c,0)
+                        if h72 in smileys: r+=h72+' ' #os.system('smileys\\'+h72)
+                        elif h60 in smileys: r+=h60+' '
+                        elif h0 in smileys: r+=h0+' '
+                        else: r+='&#'+str(ord(c))+';'
         return r
 def prints(s):
         global printm
@@ -199,6 +207,7 @@ def messaging():
                                 if (s==''): return(0)
                                 attachments = None
                                 forward_messages = None
+                                subject = None
                                 if s.isdigit():
                                         ints = int(s)
                                         if ints<10:
@@ -214,6 +223,7 @@ def messaging():
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s[0].isdigit(): forward_messages = s
+                                                elif (s[0].lower()=='s')or(s[0].lower()=='ы'): subject = s[2:] #s_The subject of my message
                                                 else: attachments = s
                                                 s=cin() #no continue for message
                                                 if s is None: return(0)
@@ -235,12 +245,41 @@ def messaging():
                                                 l3 = list(map(lambda x, y: x+' - '+y, l2[::2], l2[1::2]))
                                                 for r in l3: print(r)
                                                 continue
-                                        elif (s.lower()=='s')or(s.lower()=='ы'):
+                                        elif (s.lower()=='w')or(s.lower()=='ц'):
+                                                s = cin()
+                                                if s is None: return(0)
+                                                wall_owner = mn(s)
+                                                if wall_owner[0]=='user_id': wall_owner[0]='owner_id'
+                                                print('Now you have to input the number of posts')
+                                                s = cin()
+                                                if s is None: return(0)
+                                                try: postsN = int(s)
+                                                except: return(0)
+                                                wall = call_api('wall.get', {wall_owner[0]: wall_owner[1], 'count': postsN}).get('items')
+                                                printm='\n'
+                                                for post in wall:
+                                                        printsn(charfilter(post.get('text')))
+                                                        reposted = post.get('copy_history')
+                                                        if reposted:
+                                                                for reposts in reposted:
+                                                                        printsn('\t[REPOSTED]')
+                                                                        printsn('\t'+charfilter(reposts.get('text')))
+                                                        printsn('____')
+                                                print(printm)
+                                                printm=''
+                                                continue
+                                        elif (s.lower()==':')or(s.lower()=='ж'):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s.find('http')!=0: s='http://'+s
                                                 x = requests.get(s)
                                                 print(x.text)
+                                                continue
+                                        elif (s.lower()=='s')or(s.lower()=='ы'):
+                                                s = cin()
+                                                if s is None: return(0)
+                                                if s[-4:].lower()=='.png': s=s[:-4]
+                                                os.system('smileys\\'+s+'.png')
                                                 continue
                                         elif (s.lower()=='t')or(s.lower()=='е'):
                                                 s = cin()
@@ -260,10 +299,25 @@ def messaging():
                                         elif (s.lower()=='v')or(s.lower()=='м'):
                                                 s = cin()
                                                 if s is None: return(0)
-                                                v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long'})
+                                                v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long', 'adult': '1'})
                                                 for vid in v.get('items'):
                                                         print(vid.get('title'))
                                                         print(vid.get('player'))
+                                                continue
+                                        elif (s.lower()=='x')or(s.lower()=='ч'):
+                                                s = cin() #get the video from a "player"-link
+                                                if s is None: return(0)
+                                                x = requests.get(s).text
+                                                if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
+                                                        print('Damn')
+                                                        continue
+                                                xd = x.find('video_max_hd = ')
+                                                try: video_max_hd = int(x[xd+16:xd+17])
+                                                except: video_max_hd = 0
+                                                hds = ['240', '360', '480', '720', '1080']
+                                                video_url = x[x.find('url'+hds[video_max_hd])+7:]
+                                                video_url = video_url[:video_url.find('&amp;')]
+                                                print(video_url)
                                                 continue
                                         elif (s.lower()=='a')or(s.lower()=='ф'):
                                                 if attachments is not None:
@@ -308,19 +362,23 @@ def messaging():
                                                         au_count = au_count - AU_OFFSET_CONSTANT
                                                         print(len(audio_list), end='')
                                                 print()
+                                                def au_adress(audio):
+                                                        return 'audio' + str(audio.get('owner_id')) + '_' + str(audio.get('id'))
+                                                def au(audio):
+                                                        return audio.get('artist') + ' - ' + audio.get('title')
                                                 if m3u_flag:
                                                         m3u_file = open('m3u.m3u', 'w', encoding='utf-8')
                                                         m3u_file.write('#EXTM3U\n')
                                                         for audio in audio_list:
                                                                 url = audio.get('url')                
-                                                                m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+audio.get('artist')+' - '+audio.get('title')+'\n'+url[:url.find('?extra')]+'\n')
+                                                                m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+au(audio)+'\n#'+au_adress(audio)+'\n'+url[:url.find('?extra')]+'\n')
                                                         m3u_file.close()
                                                 else:
                                                         for audio in audio_list:
                                                                 if (not big_audio_flag) or ((audio.get('artist').lower()==s.lower())and((audio.get('title').lower()==autitle.lower())or(autitle==''))):
                                                                         url = audio.get('url')
-                                                                        if not big_audio_flag or (autitle==''): print(audio.get('artist'),'-',audio.get('title'))
-                                                                        print(url[:url.find('?extra')], 'audio'+str(audio.get('owner_id'))+'_'+str(audio.get('id')))
+                                                                        if not big_audio_flag or (autitle==''): print(au(audio))
+                                                                        print(url[:url.find('?extra')], au_adress(audio))
                                                 continue
                                         elif (s.lower()=='u')or(s.lower()=='г'):
                                                 s = cin()
@@ -347,7 +405,7 @@ def messaging():
                                                         else:
                                                                 print(call_api('friends.add', {'user_id': suserid[1]})) #domain unavailable
                                                 continue
-                                        elif (s.lower()=='w')or(s.lower()=='ы'):
+                                        elif (s.lower()=='p')or(s.lower()=='з'):
                                                 wall_flag = True
                                                 userid = 0
                                                 s = cin()
@@ -430,6 +488,10 @@ def messaging():
                          break
                 if (m==''):
                         call_api('messages.markAsRead', {'peer_id': userid[1]})
+                        printm='\n'
+                        getHistory(10, 0, False, userid[1])
+                        print(printm)
+                        printm = ''
                         return(-1)
                 if (m=='\n')and(attachments is None)and(forward_messages is None):
                         call_api('messages.markAsRead', {'peer_id': userid[1]})
@@ -454,7 +516,7 @@ def messaging():
                                         userid[1] = userid[1]-2000000000
                                 out_flag = (m[-1]=='#')or(m[-1]=='№')
                                 if out_flag: m=m[:-1]
-                                call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages})
+                                call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                                 getHistory(10, 0, False, userid[1])
                                 print(printm)
                                 printm = ''
