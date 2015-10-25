@@ -268,7 +268,7 @@ def messaging():
                                                 print(printm)
                                                 printm=''
                                                 continue
-                                        elif (s.lower()==':')or(s.lower()=='ж'):
+                                        elif (s==':')or(s==';')or(s.lower()=='ж'):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s.find('http')!=0: s='http://'+s
@@ -325,12 +325,17 @@ def messaging():
                                                         print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
                                                         continue
                                                 big_audio_flag = (s=='A')or(s=='Ф')
-                                                print('[M3U]\n[Number]\n[Author]\n[Title]') if big_audio_flag else print('[M3U]\n[Number]\n[Search string]')
+                                                print('[M3U]\n[wget]\n[Number]\n[Author]\n[Title]') if big_audio_flag else print('[M3U]\n[wget]\n[Number]\n[Search string]')
                                                 m3u_flag=False
+                                                wget_flag=False
                                                 s = cin()
                                                 if s is None: return(0)
-                                                if (s.lower()=='m3u'):
+                                                if (s.lower()=='m3u')or(s.lower()=='ь3г'):
                                                         m3u_flag=True
+                                                        s = cin()
+                                                        if s is None: return(0)
+                                                if (s.lower()=='wget')or(s.lower()=='цпуе'):
+                                                        wget_flag=True
                                                         s = cin()
                                                         if s is None: return(0)
                                                 if s.isdigit():
@@ -366,6 +371,18 @@ def messaging():
                                                         return 'audio' + str(audio.get('owner_id')) + '_' + str(audio.get('id'))
                                                 def au(audio):
                                                         return audio.get('artist') + ' - ' + audio.get('title')
+                                                if wget_flag:
+                                                        wget_filename = 'auwget.bat'
+                                                        wget_file = open(wget_filename, 'w', encoding='utf-8')
+                                                        wget_file.write('mkdir '+s+'\n')
+                                                        for audio in audio_list:
+                                                                url = audio.get('url')
+                                                                aufname = re.sub('"(.*?)"', r'«\1»', au(audio)) # "" to «»
+                                                                aufname = re.sub(r'[\\/:*?<>|+\n]','-',aufname) # replace bad characters with -
+                                                                if url!='': wget_file.write('wget '+url[:url.find('?extra')]+' -O "' + s+'\\'+aufname + '.mp3"\n')
+                                                        wget_file.write('Del %0 /q\n')
+                                                        wget_file.close()
+                                                        os.system(wget_filename)
                                                 if m3u_flag:
                                                         m3u_file = open('m3u.m3u', 'w', encoding='utf-8')
                                                         m3u_file.write('#EXTM3U\n')
