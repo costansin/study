@@ -108,7 +108,7 @@ def charfilter(s):
         for c in s:
                 ch = ord(c)
                 if ch<8617: r+=c
-                elif ch in simple_smileys: r+=simple_smileys[ch]
+                elif ch in simple_smileys: r+=simple_smileys[ch]+' '
                 else: r+='&#'+str(ch)+';'
         return r
 def prints(s):
@@ -319,7 +319,7 @@ def messaging():
                                                 if s is None: return(0)
                                                 x = requests.get(s).text
                                                 if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
-                                                        print('Damn')
+                                                        print('Adult content error')
                                                         continue
                                                 xd = x.find('video_max_hd = ')
                                                 try: video_max_hd = int(x[xd+16:xd+17])
@@ -335,17 +335,20 @@ def messaging():
                                                         print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
                                                         continue
                                                 big_audio_flag = (s=='A')or(s=='Ф')
-                                                print('[M3U]\n[wget]\n[Number]\n[Author]\n[Title]') if big_audio_flag else print('[M3U]\n[wget]\n[Number]\n[Search string]')
-                                                m3u_flag=False
-                                                wget_flag=False
+                                                print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget]\n[Number]\n[Search string]')
+                                                m3u_flag = True
+                                                wget_flag = False
+                                                wget_start_num = None
                                                 s = cin()
                                                 if s is None: return(0)
-                                                if (s.lower()=='m3u')or(s.lower()=='ь3г'):
-                                                        m3u_flag=True
+                                                if (s.lower()=='here')or(s.lower()=='руку'):
+                                                        m3u_flag = False
                                                         s = cin()
                                                         if s is None: return(0)
-                                                if (s.lower()=='wget')or(s.lower()=='цпуе'):
-                                                        wget_flag=True
+                                                if (s[:4].lower()=='wget')or(s[:4].lower()=='цпуе'):
+                                                        wget_flag = True
+                                                        try: wget_start_num = int(s[4:])
+                                                        except: wget_start_num = None
                                                         s = cin()
                                                         if s is None: return(0)
                                                 if s.isdigit():
@@ -362,9 +365,14 @@ def messaging():
                                                 audio_list = []
                                                 AU_OFFSET_CONSTANT = 300
                                                 au_offset = 0
+                                                audioget = s.strip().lower()=='id' 
+                                                if s.strip()=='':
+                                                        audioget = True
+                                                        s = str(idscash[token_num].get('id'))
+                                                elif audioget: s = str(mn(autitle)[1])
+                                                if audioget: big_audio_flag = False
                                                 while au_count>0:
-                                                        if s.strip()=='':
-                                                                audio_list = audio_list + call_api('audio.get', {'owner_id': idscash[token_num].get('id'), 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                        if audioget: audio_list = audio_list + call_api('audio.get', {'owner_id': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
                                                         else:
                                                                 if big_audio_flag:
                                                                         if autitle=='':
@@ -384,12 +392,18 @@ def messaging():
                                                 if wget_flag:
                                                         wget_filename = 'auwget.bat'
                                                         wget_file = open(wget_filename, 'w', encoding='utf-8')
-                                                        wget_file.write('mkdir '+s+'\n')
+                                                        if not s: s = '~'
+                                                        if wget_start_num is None: aunum = ''
+                                                        else: wget_start_num -= len(audio_list)
+                                                        wget_file.write('chcp 65001\nmkdir '+s+'\n')
                                                         for audio in audio_list:
                                                                 url = audio.get('url')
                                                                 aufname = re.sub('"(.*?)"', r'«\1»', au(audio)) # "" to «»
                                                                 aufname = re.sub(r'[\\/:*?<>|+\n]','-',aufname) # replace bad characters with -
-                                                                if url!='': wget_file.write('wget '+url[:url.find('?extra')]+' -O "' + s+'\\'+aufname + '.mp3"\n')
+                                                                if wget_start_num is not None:
+                                                                        wget_start_num += 1
+                                                                        aunum = str(wget_start_num)+'_'
+                                                                if url!='': wget_file.write('wget '+url[:url.find('?extra')]+' -O "' + s+'\\'+aunum+aufname + '.mp3"\n')
                                                         wget_file.write('Del %0 /q\n')
                                                         wget_file.close()
                                                         os.system(wget_filename)
