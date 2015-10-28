@@ -372,15 +372,13 @@ def messaging():
                                                 elif audioget: s = str(mn(autitle)[1])
                                                 if audioget: big_audio_flag = False
                                                 while au_count>0:
-                                                        if audioget: audio_list = audio_list + call_api('audio.get', {'owner_id': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
-                                                        else:
-                                                                if big_audio_flag:
-                                                                        if autitle=='':
-                                                                                audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1}).get('items')
-                                                                        else:
-                                                                                audio_list = audio_list + call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
-                                                                else:
-                                                                        audio_list = audio_list + call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                        if audioget: audio_list_step = call_api('audio.get', {'owner_id': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                        elif big_audio_flag:
+                                                                if autitle=='': audio_list_step = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1}).get('items')
+                                                                else: audio_list_step = call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                        else: audio_list_step = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                        if not audio_list_step: break        
+                                                        audio_list = audio_list + audio_list_step
                                                         au_offset = au_offset + AU_OFFSET_CONSTANT
                                                         au_count = au_count - AU_OFFSET_CONSTANT
                                                         print(len(audio_list), end='')

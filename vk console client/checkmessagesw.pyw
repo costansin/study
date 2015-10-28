@@ -8,6 +8,7 @@ import re
 import random
 import urllib.request
 from tkinter import *
+#import pyglet
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime = 1
 waitTime = 53
@@ -278,15 +279,10 @@ def main():
                 looping = True
                 while (check_inbox()==0):
                         printm=''
-                        print('-', end='')
-                        try:
-                                for timer in range(waitTime):
-                                        time.sleep(1)
-                        except KeyboardInterrupt:
-                                print()
-                                break
+                        time.sleep(waitTime)
                 else:
-                        print()
+                        #sound = pyglet.media.load('lunar.wav')
+                        #sound.play()
                         master=Tk()
                         master.wm_attributes("-topmost", 1)
                         master.wm_state('normal')
@@ -294,7 +290,7 @@ def main():
                         w = Message(master, text=printm)
                         w.pack()
                         master.mainloop()
-                        print(printm)
+                        time.sleep(waitTime)
                 looping = False
 if __name__ == '__main__':
         main()
