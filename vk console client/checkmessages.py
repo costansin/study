@@ -36,44 +36,40 @@ def call_api(method, params):
         params["access_token"] = token_list[token_num]
         params["v"] = "5.35"
         url = "https://api.vk.com/method/" + method
-        er = False
         E = False
         while True:
                 try:
-                        try:
-                                result = requests.post(url, data=params).json()
-                                E = False
-                        except KeyboardInterrupt:
-                                return()
-                        if 'error' not in result:
-                                return result["response"] if "response" in result else result
-                                er = False
+                        E = False
+                        try: result = requests.post(url, data=params).json()
+                        except KeyboardInterrupt: return
+                        if 'error' not in result: return result["response"] if "response" in result else result
                         else:
-                                if not er:
-                                        err = result.get('error')
-                                        msg = err.get('error_msg')
-                                        print(msg)
-                                        if msg.find('Validation')>=0:
-                                                print(err.get('redirect_uri'))
-                                        er = True
-                                time.sleep(sleepTime)
+                                err = result.get('error')
+                                msg = err.get('error_msg')
+                                print(msg)
+                                if msg.find('Validation')+1: print(err.get('redirect_uri'))
+                                return
                 except:
                         if not E:
                                 print('E', end='')
                                 E = True
                         time.sleep(sleepTime)
 for token_num in range(len(token_list)):
-        idscash = idscash + [call_api('users.get', {})[0]]
-        lastNviewcash = lastNviewcash + [call_api('notifications.get',{'count': '0'}).get('last_viewed')]
+        api_call = call_api('users.get', {})
+        if api_call: idscash = idscash + [api_call[0]]
+        else: idscash = idscash + [{'last_name': str(token_num), 'first_name': 'token_num', 'id': 0}]
+        api_call = call_api('notifications.get',{'count': '0'})
+        if api_call: lastNviewcash = lastNviewcash + [api_call.get('last_viewed')]
+        else: lastNviewcash = lastNviewcash + [int(time.time())]
         prob=prob+[1]
+prevuserid = str(idscash[0].get('id'))
 print()
 token_num = 0
 def cin():
         try:
                 s = input()
                 return(s)
-        except KeyboardInterrupt:
-                exit
+        except KeyboardInterrupt: exit
 def read_mnemonics():
         result = {}
         with open(mnemofile) as f:
@@ -82,23 +78,29 @@ def read_mnemonics():
                         result[key] = value
         f.close()
         return result
-def rus_to_lat(wrong):
+def l(wrong):
+        wrong = wrong.lower().strip()
+        #re.match("^[' 'A-Za-z0-9_-]*$", wrong)
         right = ''
         for wrong_letter in wrong:
-                right_letter = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,._'['йцукенгшщзхъфывапролджэячсмитьбю_'.find(wrong_letter)]
+                if ord(wrong_letter)<128: right_letter = wrong_letter
+                else: right_letter = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,.#_'['йцукенгшщзхъфывапролджэячсмитьбю№_'.find(wrong_letter)]
                 right = right + right_letter
         return right
 def mn(idstring):
-        if idstring in mnemonics: return ['user_id', mnemonics[idstring]]
-        elif idstring.isdigit(): return ['user_id', idstring]
-        elif not re.match("^[' 'A-Za-z0-9_-]*$", idstring): return mn(rus_to_lat(idstring.lower()))
-        else: return ['domain', idstring]
+        idstring = l(idstring)
+        if idstring in mnemonics: return mnemonics[idstring]
+        elif idstring.isdigit(): return idstring
+        else: return
+                #api_call = call_api('users.get', {'user_ids': idstring})
+                #if api_call: return str(api_call[0].get('id'))
+                #else: return '0'
 def read_ignore():
         result = []
         with open(ignorefile) as f:
                 for line in f:
                         line = line.strip()
-                        result.append(mn(line)[1])
+                        result.append(mn(line))
         f.close()
         return result
 def smiley_hex(c, sh):
@@ -136,7 +138,8 @@ def print_attachments(attache):
                                                 break
                         elif atype=='video':
                                 req = str(cropadress)+'_'+str(stuff.get('access_key'))
-                                printsn(call_api('video.get', {'videos': req}).get('items')[0].get('player'))
+                                api_call = call_api('video.get', {'videos': req}).get('items')
+                                if api_call: printsn(api_call[0].get('player'))
                         else:
                                 url = stuff.get('url')
                                 if url is not None:
@@ -162,15 +165,14 @@ def print_message(message, k):
                         prints('['+str(fwdm.get('user_id'))+']')
                         print_message(fwdm, k+1)                     
 def getHistory(count, offset, print_numbers, uid):
-        if not isinstance(uid, int): uid = call_api('users.get', {'user_ids': uid})[0].get('id')
+        if not isinstance(uid, int): uid = mn(uid)
         unread = False
-        try:
-                history = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid}).get('items')
-        except:
-                return(0)
+        api_call = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid})
+        if api_call: history = api_call.get('items')
+        else: return 0
         message={'date': 0}
         inoutchar = ''
-        if history is not None:
+        if history:
                 for message in reversed(history):
                         if not unread and (message.get('read_state')==0):
                                 unread = True
@@ -190,32 +192,33 @@ def getHistory(count, offset, print_numbers, uid):
                                 printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
                 if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
 def messaging():
-        global token_num, printm, waitTime
-        print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+':')
+        global token_num, printm, waitTime, prevuserid
+        #prevuserid = str(idscash[token_num].get('id'))
+        def iam(): print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+' to '+prevuserid+':')
+        iam()
         while True:
                 m = ''
                 s = ''
                 userid = None
                 wall_flag = False
-                while (s=='')or((s[-1]!='#')and(s[-1]!='№')):
+                while (s=='')or(l(s[-1])!='#'):
                         s = cin()
                         if s is None: return(0)
                         if (m==''):
-                                if (s==''): return(0)
+                                if (s==''): return(-2)
                                 attachments = None
                                 forward_messages = None
                                 subject = None
-                                if s.isdigit():
-                                        ints = int(s)
-                                        if ints<10:
-                                                token_num = ints
-                                                print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+':')
-                                        else: waitTime = ints
-                                        continue
                                 if (len(s)==1):
-                                        if (s=="'")or(s=='э'):
+                                        if s.isdigit():
+                                                token_num = int(s)
+                                                iam()
+                                                continue												
+                                        def r(c):
+                                                return l(s)==c
+                                        if r("'"):
                                                 return(-1)
-                                        if s=='+':
+                                        if r("+"):
                                                 #print('[forward messages ids (e.g. 1232,1233,1237) | attachments (e.g. photo123123_123223,audio-34232_23123)]')
                                                 s = cin()
                                                 if s is None: return(0)
@@ -224,17 +227,23 @@ def messaging():
                                                 else: attachments = s
                                                 s=cin() #no continue for message
                                                 if s is None: return(0)
-                                        if (s.lower()=='n')or(s.lower()=='т'):
+                                        if r("~")or r("`"):
+                                                s = cin()
+                                                if s is None: return(0)
+                                                try: waitTime = int(s)
+                                                except: return(0)
+                                                continue
+                                        elif r("n"):
                                                 call_api('notifications.markAsViewed', {})
                                                 lastNviewcash[token_num] = int(time.time())
-                                                print('Done')
+                                                print()
                                                 continue
-                                        elif (s.lower()=='p')or(s.lower()=='з'):
+                                        elif r("p"):
                                                 print('Set probabilities of token_nums while checkbox')
                                                 global prob
                                                 prob = [float(input()) for i in range(len(token_list))]
                                                 continue
-                                        elif (s.lower()=='e')or(s.lower()=='у'):                #rasp.yandex.ru/search/suburban/?
+                                        elif r("e"):                #rasp.yandex.ru/search/suburban/?
                                                 x = urllib.request.urlopen('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').read().decode('utf-8')
                                                 #x = requests.get('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').text
                                                 print(x[x.find('<title>')+7:x.find('</title>')])
@@ -242,17 +251,18 @@ def messaging():
                                                 l3 = list(map(lambda x, y: x+' - '+y, l2[::2], l2[1::2]))
                                                 for r in l3: print(r)
                                                 continue
-                                        elif (s.lower()=='w')or(s.lower()=='ц'):
+                                        elif r("w"):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 wall_owner = mn(s)
-                                                if wall_owner[0]=='user_id': wall_owner[0]='owner_id'
                                                 print('Now you have to input the number of posts')
                                                 s = cin()
                                                 if s is None: return(0)
                                                 try: postsN = int(s)
                                                 except: return(0)
-                                                wall = call_api('wall.get', {wall_owner[0]: wall_owner[1], 'count': postsN}).get('items')
+                                                api_call = call_api('wall.get', {'owner_id': wall_owner, 'count': postsN})
+                                                if api_call: wall = api_call.get('items')
+                                                else: return(0)
                                                 printm='\n'
                                                 for post in wall:
                                                         printsn(charfilter(post.get('text')))
@@ -265,14 +275,14 @@ def messaging():
                                                 print(printm)
                                                 printm=''
                                                 continue
-                                        elif (s==':')or(s==';')or(s.lower()=='ж'):
+                                        elif r(":"):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s.find('http')!=0: s='http://'+s
                                                 x = requests.get(s)
                                                 print(x.text)
                                                 continue
-                                        elif (s.lower()=='s')or(s.lower()=='ы'):
+                                        elif r("s"):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s in rev_simple_smileys:
@@ -291,14 +301,14 @@ def messaging():
                                                 elif h60 in smileys: os.system('smileys\\'+h60)
                                                 elif h0 in smileys: os.system('smileys\\'+h0)
                                                 continue
-                                        elif (s.lower()=='t')or(s.lower()=='е'):
+                                        elif r("t"):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 lit = ast.literal_eval(s)
                                                 g = call_api(*lit)
                                                 print(charfilter(str(g)))
                                                 continue
-                                        elif (s.lower()=='l')or(s.lower()=='д'):
+                                        elif r("l"):
                                                 print('type owner_id\ntypes:\npost comment photo audio video note photo_comment video_comment topic_comment sitepage')
                                                 s = cin()
                                                 if s is None: return(0)
@@ -306,15 +316,16 @@ def messaging():
                                                 lowner, lid = what.split('_') #ifLiked - likes.delete
                                                 print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                                 continue
-                                        elif (s.lower()=='v')or(s.lower()=='м'):
+                                        elif r("v"):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long', 'adult': '1'})
+                                                if v is None: return(0)
                                                 for vid in v.get('items'):
                                                         print(vid.get('title'))
                                                         print(vid.get('player'))
                                                 continue
-                                        elif (s.lower()=='x')or(s.lower()=='ч'):
+                                        elif r("x"):
                                                 s = cin() #get the video from a "player"-link
                                                 if s is None: return(0)
                                                 x = requests.get(s).text
@@ -329,12 +340,12 @@ def messaging():
                                                 video_url = video_url[:video_url.find('&amp;')]
                                                 print(video_url)
                                                 continue
-                                        elif (s.lower()=='a')or(s.lower()=='ф'):
+                                        elif r("a"):
                                                 if attachments is not None:
                                                         add_owner_id, add_audio_id = attachments.split('_')
                                                         print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
                                                         continue
-                                                big_audio_flag = (s=='A')or(s=='Ф')
+                                                big_audio_flag = s.isupper()
                                                 print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget]\n[Number]\n[Search string]')
                                                 m3u_flag = True
                                                 wget_flag = False
@@ -369,24 +380,34 @@ def messaging():
                                                 if s.strip()=='':
                                                         audioget = True
                                                         s = str(idscash[token_num].get('id'))
-                                                elif audioget: s = str(mn(autitle)[1])
+                                                elif audioget: s = str(mn(autitle))
                                                 if audioget: big_audio_flag = False
                                                 while au_count>0:
-                                                        if audioget: audio_list_step = call_api('audio.get', {'owner_id': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                        if audioget:
+                                                                api_call = call_api('audio.get', {'owner_id': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
+                                                                if api_call: audio_list_step = api_call.get('items')
+                                                                else: audio_list_step = None
                                                         elif big_audio_flag:
-                                                                if autitle=='': audio_list_step = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1}).get('items')
-                                                                else: audio_list_step = call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
-                                                        else: audio_list_step = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset}).get('items')
+                                                                if autitle=='':
+                                                                        api_call = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1})
+                                                                        if api_call: audio_list_step = api_call.get('items')
+                                                                        else: audio_list_step = None
+                                                                else:
+                                                                        api_call = call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
+                                                                        if api_call: audio_list_step = api_call.get('items')
+                                                                        else: audio_list_step = None
+                                                        else:
+                                                                api_call = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
+                                                                if api_call: audio_list_step = api_call.get('items')
+                                                                else: audio_list_step = None
                                                         if not audio_list_step: break        
                                                         audio_list = audio_list + audio_list_step
                                                         au_offset = au_offset + AU_OFFSET_CONSTANT
                                                         au_count = au_count - AU_OFFSET_CONSTANT
                                                         print(len(audio_list), end='')
                                                 print()
-                                                def au_adress(audio):
-                                                        return 'audio' + str(audio.get('owner_id')) + '_' + str(audio.get('id'))
-                                                def au(audio):
-                                                        return audio.get('artist') + ' - ' + audio.get('title')
+                                                def au_adress(audio): return 'audio' + str(audio.get('owner_id')) + '_' + str(audio.get('id'))
+                                                def au(audio): return audio.get('artist') + ' - ' + audio.get('title')
                                                 if wget_flag:
                                                         wget_filename = 'auwget.bat'
                                                         wget_file = open(wget_filename, 'w', encoding='utf-8')
@@ -419,62 +440,66 @@ def messaging():
                                                                         if not big_audio_flag or (autitle==''): print(au(audio))
                                                                         print(url[:url.find('?extra')], au_adress(audio))
                                                 continue
-                                        elif (s.lower()=='u')or(s.lower()=='г'):
+                                        elif r("u"):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 suserid = mn(s)
-                                                info = call_api('users.get', {'user_ids': suserid[1]})[0]
-                                                print(info)
-                                                actif = call_api('messages.getLastActivity', {'user_id': info.get('id')})
-                                                onstatus = 'online' if actif.get('online') else 'offline'
-                                                print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
+                                                if not suserid: suserid = l(s)
+                                                info = call_api('users.get', {'user_ids': suserid})
+                                                if info:
+                                                        print(info[0])
+                                                        actif = call_api('messages.getLastActivity', {'user_id': info[0].get('id')})
+                                                        if actif:
+                                                                onstatus = 'online' if actif.get('online') else 'offline'
+                                                                print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
                                                 continue
-                                        elif (s.lower()=='f')or(s.lower()=='а'):
+                                        elif r("f"):
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s=='':
                                                         friend_id_list = call_api('friends.getRecent', {'count': 1000})
-                                                        friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
-                                                        for friend in friend_list:
-                                                                print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
+                                                        if friend_id_list: friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
+                                                        if friend_list:
+                                                                for friend in friend_list:
+                                                                        try: print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
+                                                                        except KeyboardInterrupt: break
                                                 else:
                                                         suserid = mn(s)
-                                                        if suserid[1][0]=='-':
-                                                                print(call_api('groups.join', {'group_id': suserid[1][1:]}))
-                                                        else:
-                                                                print(call_api('friends.add', {'user_id': suserid[1]})) #domain unavailable
+                                                        if suserid[0]=='-': print(call_api('groups.join', {'group_id': suserid[1:]}))
+                                                        else: print(call_api('friends.add', {'user_id': suserid})) #domain unavailable
                                                 continue
-                                        elif (s.lower()=='p')or(s.lower()=='з'):
+                                        elif r("q"):
                                                 wall_flag = True
                                                 userid = 0
                                                 s = cin()
                                                 if s is None: return(0)
-                                        elif (s.lower()=='r')or(s.lower()=='к'):
-                                                resmes = call_api('messages.getDialogs', {'unread': '1'}).get('items')
-                                                if (resmes == []):
-                                                        print('-')
+                                        elif r("r"):
+                                                api_call = call_api('messages.getDialogs', {'unread': '1'})
+                                                if api_call: resmes = api_call.get('items')
+                                                else: return(0)
+                                                if (resmes == []): print('-')
                                                 else:
                                                         for mes in resmes:
                                                                 rm = mes.get('message')
                                                                 print(rm.get('user_id'), mes.get('unread'), '#'+charfilter(rm.get('body')))
                                                 continue
-                                        elif (s.lower()=='i')or(s.lower()=='ш'):
+                                        elif r("i"):
                                                 print(ignore)
                                                 s = cin()
                                                 if s is None: return(0)
                                                 s = s.strip()
                                                 if s=='': return(0)
                                                 iuid = mn(s)
-                                                if iuid[1] in ignore:
-                                                        ignore.remove(iuid[1])
+                                                if iuid in ignore:
+                                                        ignore.remove(iuid)
                                                         print('temporarily seen')
                                                 else:
-                                                        ignore.append(iuid[1])
+                                                        ignore.append(iuid)
                                                         with open(ignorefile, 'a') as f:
                                                                 f.write('\n'+s)
                                                         f.close()
                                                 continue
-                                        elif (s.lower()=='h')or(s.lower()=='р'):
+                                        elif r("h"):
                                                 print('count, offset, print_numbers, uid')
                                                 try:
                                                         hcount, hoffset, hprint_numbers, huid = input(), input(), input(), input()
@@ -483,11 +508,13 @@ def messaging():
                                                 getHistory(hcount, hoffset, hprint_numbers, huid)
                                                 print(printm)
                                                 continue
-                                        elif (s.lower()=='d')or(s.lower()=='в'):
+                                        elif r("d"):
                                                 print('DELETE MESSAGES BY IDS.\nInput message ids, separated with commas.')
                                                 ids = cin()
                                                 if ids is None: return(0)
-                                                delete_list = call_api('messages.getById', {'message_ids': ids}).get('items')
+                                                api_call = call_api('messages.getById', {'message_ids': ids})
+                                                if api_call: delete_list = api_call.get('items')
+                                                else: return(0)
                                                 printm = ''
                                                 for mes in delete_list:                                                        
                                                         del_uid = str(mes.get('user_id'))
@@ -498,65 +525,65 @@ def messaging():
                                                 print('DELETE THESE MESSAGES?\nY\\N')
                                                 delete_confirmation = cin()
                                                 if delete_confirmation is None: return(0)
-                                                if delete_confirmation.lower()=='y':
+                                                if l(delete_confirmation)=='y':
                                                         print(call_api('messages.delete', {'message_ids': ids}))
                                                 continue
                         sharp = s.find('#')
                         Nsign = s.find('№')
                         if (Nsign>=0)and((Nsign<sharp)or(sharp<0)): sharp = Nsign
+                        alls = s
                         if userid is None:
-                                try:
-                                        userstr = s[:sharp]
-                                        s = s[sharp+1:]
-                                        userid = mn(userstr)
-                                except:
-                                        print('message format: userid#multi-line message#')
-                                        continue
+                                userstr = s[:sharp]
+                                s = s[sharp+1:]
+                                userid = mn(userstr)
+                        if not userid:
+                                userid = prevuserid
+                                s = alls
                         m+='\n'+s
                         if m=='\n':
                                 break
+                prevuserid = userid
                 m=m[:-1]
                 if wall_flag:
-                        call_api('wall.post', {'message': m, 'attachments': attachments})
-                        print('Done')
+                        print(call_api('wall.post', {'message': m, 'attachments': attachments}))
                         break
                 if userid is None: return(0)
-                if (userid[1][0]=='-'):
-                         call_api('wall.post', {'owner_id': userid[1], 'from_group': 1, 'message': m, 'attachments': attachments})
-                         print('Done')
+                if (userid[0]=='-'):
+                         print(call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}))
                          break
                 if (m==''):
-                        call_api('messages.markAsRead', {'peer_id': userid[1]})
+                        call_api('messages.markAsRead', {'peer_id': userid})
                         printm='\n'
-                        getHistory(10, 0, False, userid[1])
+                        getHistory(10, 0, False, userid)
                         print(printm)
                         printm = ''
                         return(-1)
                 if (m=='\n')and(attachments is None)and(forward_messages is None):
-                        call_api('messages.markAsRead', {'peer_id': userid[1]})
+                        call_api('messages.markAsRead', {'peer_id': userid})
                         printm='\n'
-                        getHistory(10, 0, False, userid[1])
+                        getHistory(10, 0, False, userid)
                         print(printm)
                         printm = ''
-                elif (m=='\n#')or(m=='\n№'):
+                elif (l(m)=='#'):
                         printm='\n'
-                        getHistory(200, 0, False, userid[1])
+                        getHistory(200, 0, False, userid)
                         print(printm)
                         printm = ''
                 else:
                         resh = re.match('\n[#|№]+', m)
                         if resh:
-                                getHistory(200, (resh.endpos-3)*200, True, userid[1])
+                                getHistory(200, (resh.endpos-3)*200, True, userid)
                                 print(printm)
                                 printm = ''
                         else:
-                                if isinstance(userid[1],int) and (userid[1]>2000000000):
-                                        userid[0] = 'chat_id'
-                                        userid[1] = userid[1]-2000000000
-                                out_flag = (m[-1]=='#')or(m[-1]=='№')
+                                if len(userid)>=10:
+                                        meth = 'chat_id'
+                                        userid = str(int(userid)-2000000000)
+                                else: meth = 'user_id'
+                                out_flag = l(m[-1])=='#'
                                 if out_flag: m=m[:-1]
-                                call_api('messages.send', {userid[0]: userid[1], 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
-                                getHistory(10, 0, False, userid[1])
+                                call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
+                                getHistory(10, 0, False, userid)
                                 print(printm)
                                 printm = ''
                                 if out_flag: return(-1)
@@ -567,14 +594,17 @@ def check_inbox():
         prev_token_num = token_num
         for token_num in range(len(token_list)):
                 if random.random() > prob[token_num]: continue
-                try:
-                        myname = idscash[token_num]
-                        viewed_time = lastNviewcash[token_num]
-                        notif_resp = call_api('notifications.get',{'start_time': viewed_time})
-                        resp = call_api('messages.getDialogs', {'unread': '1'})
-                        r = notif_resp.get('count')
-                        t = resp.get('count')
-                except:
+                myname = idscash[token_num]
+                viewed_time = lastNviewcash[token_num]
+                notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                resp = call_api('messages.getDialogs', {'unread': '1'})
+                if notif_resp: r = notif_resp.get('count')
+                else:
+                        print(printm)
+                        return(0)
+                if resp: t = resp.get('count')
+                else:
+                        print(printm)
                         return(0)
                 A+=r+t
                 printsn(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
@@ -590,8 +620,8 @@ def check_inbox():
                                                 A-=1
                                                 t-=1
                                                 continue
-                                        respname = call_api('users.get', {'user_ids': uid})[0]
-                                        printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                                        respname = call_api('users.get', {'user_ids': uid})
+                                        if respname: printsn(respname[0].get('first_name')+' '+respname[0].get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                         getHistory(N, 0, False, uid)
                                 else:
                                         uid = 2000000000 + chat_id
@@ -602,8 +632,7 @@ def check_inbox():
                                         else:
                                                 printsn(str(uid)+' chat '+str(N))
                                                 getHistory(N, 0, False, uid)
-                if (t>0):
-                        printsn("-------")
+                if (t>0): printsn("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
                         xtype = x.get('type')
@@ -616,12 +645,9 @@ def check_inbox():
                                       elif parent.get('photo') is not None:
                                               parent = parent.get('photo')
                                               parent_id = parent.get('owner_id')
-                                      else:
-                                              parent_id = parent.get('owner_id')
-                                if 'photo' in xtype:
-                                      printsn('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
-                                else:
-                                      printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+                                      else: parent_id = parent.get('owner_id')
+                                if 'photo' in xtype: printsn('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
+                                else: printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                                 printsn(parent.get('text'))
                                 print_attachments(parent.get('attachments'))
                         feedback = x.get('feedback')
@@ -629,8 +655,8 @@ def check_inbox():
                         if whos is not None:
                                 for who in whos:
                                         whuid = who.get('from_id')
-                                        whuidinfo = call_api('users.get', {'user_ids': whuid})[0]
-                                        printsn(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
+                                        whuidinfo = call_api('users.get', {'user_ids': whuid})
+                                        if whuidinfo: printsn(whuidinfo[0].get('first_name')+' '+whuidinfo[0].get('last_name')+' '+str(whuid))
                         comment = feedback.get('text')
                         if comment is None:
                                 printsn(xtype)
@@ -645,14 +671,12 @@ def main():
         mnemonics = read_mnemonics()
         ignore = read_ignore()
         while True:
-                mes=0
                 mes=messaging()
-                while (mes!=-1):
+                if mes==-2:
                         printm='\n'
                         check_inbox()
                         print(printm)
-                        mes=messaging()
-                else:
+                elif mes==-1:
                         printm=''
                         looping = True
                         while (check_inbox()==0):
