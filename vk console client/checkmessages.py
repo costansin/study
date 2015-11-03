@@ -33,15 +33,26 @@ def call_api(method, params):
         #print(method, params)
         #time.sleep(sleepTime)
         print('.', end='') if not looping else print(',', end='')
-        params["access_token"] = token_list[token_num]
-        params["v"] = "5.35"
-        url = "https://api.vk.com/method/" + method
+        if method[:7]=='http://':
+                q = method.find('?')
+                url = method[:q]
+                files = {'photo': ('file.png', open(params, 'rb'))}
+                params = {}
+                for query in method[q+1:].split('&'):
+                        v = query.split('=')
+                        params[v[0]]=v[1]
+        else:
+                params["access_token"] = token_list[token_num]
+                params["v"] = "5.35"
+                url = "https://api.vk.com/method/" + method
+                files = None
         E = False
         while True:
                 try:
                         E = False
-                        try: result = requests.post(url, data=params).json()
+                        try: result = requests.post(url, data=params, files=files)
                         except KeyboardInterrupt: return
+                        result = result.json()
                         if 'error' not in result: return result["response"] if "response" in result else result
                         else:
                                 err = result.get('error')
@@ -226,6 +237,17 @@ def messaging():
                                                 #print('[forward messages ids (e.g. 1232,1233,1237) | attachments (e.g. photo123123_123223,audio-34232_23123)]')
                                                 s = cin()
                                                 if s is None: return(0)
+                                                if r("u"):
+                                                        s = cin()
+                                                        if s is None: return(0)
+                                                        if s.strip()=='': s='Безымянный.png'
+                                                        upload_url = call_api('photos.getMessagesUploadServer', {})
+                                                        if upload_url: upload_stuff = call_api(upload_url.get('upload_url'), s)
+                                                        else: return(0)
+                                                        if upload_stuff: uploaded_photo = call_api('photos.saveMessagesPhoto', upload_stuff)
+                                                        else: return(0)
+                                                        if uploaded_photo: s = 'photo'+str(uploaded_photo[0].get('owner_id'))+'_'+str(uploaded_photo[0].get('id'))
+                                                        print('\n'+s)
                                                 if s[0].isdigit(): forward_messages = s
                                                 elif (s[0].lower()=='s')or(s[0].lower()=='ы'): subject = s[2:] #s_The subject of my message
                                                 else: attachments = s
@@ -291,6 +313,7 @@ def messaging():
                                         elif r("s"):
                                                 s = cin()
                                                 if s is None: return(0)
+                                                s = s.strip()
                                                 if s in rev_simple_smileys:
                                                         os.system('smileys\\'+rev_simple_smileys[s])
                                                         continue
