@@ -128,6 +128,9 @@ def print_attachments(attache):
                         stuff = attached.get(atype)
                         owner = stuff.get('owner_id')
                         if owner is None: owner = stuff.get('to_id')
+                        if owner is None:
+                                try: owner = -stuff.get('group_id')
+                                except: owner = None
                         cropadress = str(owner)+'_'+str(stuff.get('id'))
                         adress = croptype + cropadress
                         if (atype=='photo')or(atype=='sticker'):
@@ -142,6 +145,7 @@ def print_attachments(attache):
                                 if api_call: printsn(api_call[0].get('player'))
                         else:
                                 url = stuff.get('url')
+                                if url is None: url = stuff.get('view_url')
                                 if url is not None:
                                         urlf = url.find('?extra')        
                                         if (urlf!=-1):
@@ -265,12 +269,14 @@ def messaging():
                                                 else: return(0)
                                                 printm='\n'
                                                 for post in wall:
-                                                        printsn(charfilter(post.get('text')))
+                                                        printsn('wall'+str(post.get('from_id'))+'_'+str(post.get('id'))+'\n\n'+charfilter(post.get('text')))
                                                         reposted = post.get('copy_history')
                                                         if reposted:
                                                                 for reposts in reposted:
                                                                         printsn('\t[REPOSTED]')
                                                                         printsn('\t'+charfilter(reposts.get('text')))
+                                                        printsn('\n'+str(post.get('likes').get('count'))+' likes, '+str(post.get('comments').get('count'))+' comments')
+                                                        print_attachments(post.get('attachments'))
                                                         printsn('____')
                                                 print(printm)
                                                 printm=''
@@ -447,18 +453,24 @@ def messaging():
                                                 if not suserid: suserid = l(s)
                                                 info = call_api('users.get', {'user_ids': suserid})
                                                 if info:
-                                                        print(info[0])
-                                                        actif = call_api('messages.getLastActivity', {'user_id': info[0].get('id')})
-                                                        if actif:
-                                                                onstatus = 'online' if actif.get('online') else 'offline'
-                                                                print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
+                                                        if len(info)>1:
+                                                                for user in info: print(user.get('first_name'),user.get('last_name'),user.get('id'))
+                                                        else:
+                                                                print(info[0])
+                                                                actif = call_api('messages.getLastActivity', {'user_id': info[0].get('id')})
+                                                                if actif:
+                                                                        onstatus = 'online' if actif.get('online') else 'offline'
+                                                                        print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
                                                 continue
                                         elif r("f"):
                                                 s = cin()
                                                 if s is None: return(0)
-                                                if s=='':
-                                                        friend_id_list = call_api('friends.getRecent', {'count': 1000})
-                                                        if friend_id_list: friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
+                                                friend_id_list = None
+                                                if s=='': friend_id_list = call_api('friends.getRecent', {'count': 1000})
+                                                elif l(s)=='<' or l(s)==',': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 1})
+                                                elif l(s)=='>' or l(s)=='.': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 0})
+                                                if friend_id_list:
+                                                        friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
                                                         if friend_list:
                                                                 for friend in friend_list:
                                                                         try: print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
@@ -499,6 +511,22 @@ def messaging():
                                                                 f.write('\n'+s)
                                                         f.close()
                                                 continue
+                                        elif r("m"):
+                                                print(mnemonics)
+                                                s = cin()
+                                                if s is None: return(0)
+                                                s = s.strip()
+                                                if s=='': return(0)
+                                                muserids = cin()
+                                                if muserids is None: return(0)
+                                                try: muserid = int(muserids)
+                                                except: return(0)
+                                                muserids = str(muserid)
+                                                mnemonics[s] = muserids
+                                                with open(mnemofile, 'a') as f:
+                                                        f.write('\n'+s+' '+muserids)
+                                                f.close()
+                                                continue
                                         elif r("h"):
                                                 print('count, offset, print_numbers, uid')
                                                 try:
@@ -528,6 +556,10 @@ def messaging():
                                                 if l(delete_confirmation)=='y':
                                                         print(call_api('messages.delete', {'message_ids': ids}))
                                                 continue
+                                        elif r("z"):
+                                                s = cin()
+                                                if s is None: return(0)
+                                                print(l(s))
                         sharp = s.find('#')
                         Nsign = s.find('№')
                         if (Nsign>=0)and((Nsign<sharp)or(sharp<0)): sharp = Nsign
@@ -551,19 +583,13 @@ def messaging():
                 if (userid[0]=='-'):
                          print(call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}))
                          break
-                if (m==''):
+                if (m==''): iam()
+                elif (m=='\n')and(attachments is None)and(forward_messages is None):
                         call_api('messages.markAsRead', {'peer_id': userid})
                         printm='\n'
                         getHistory(10, 0, False, userid)
                         print(printm)
-                        printm = ''
-                        return(-1)
-                if (m=='\n')and(attachments is None)and(forward_messages is None):
-                        call_api('messages.markAsRead', {'peer_id': userid})
-                        printm='\n'
-                        getHistory(10, 0, False, userid)
-                        print(printm)
-                        printm = ''
+                        printm = '' #return(-1)
                 elif (l(m)=='#'):
                         printm='\n'
                         getHistory(200, 0, False, userid)
@@ -582,6 +608,14 @@ def messaging():
                                 else: meth = 'user_id'
                                 out_flag = l(m[-1])=='#'
                                 if out_flag: m=m[:-1]
+                                print(len(m))
+                                if len(m)>348:
+                                        print("C'mon, do I really interested in that? Better ask me how am I.\n[or all is well?]")
+                                        confirmation = cin()
+                                        if confirmation is None: return(0)
+                                        if l(confirmation)!="all is well":
+                                                print("resend it to youself, yeah? hah")
+                                                userid = idscash[token_num].get('id')
                                 call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                                 getHistory(10, 0, False, userid)
                                 print(printm)

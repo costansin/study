@@ -8,7 +8,6 @@ import re
 import random
 import urllib.request
 from tkinter import *
-#import pyglet
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime = 1
 waitTime = 53
@@ -37,44 +36,60 @@ def call_api(method, params):
         params["access_token"] = token_list[token_num]
         params["v"] = "5.35"
         url = "https://api.vk.com/method/" + method
-        er = False
         E = False
         while True:
                 try:
-                        try:
-                                result = requests.post(url, data=params).json()
-                                E = False
-                        except KeyboardInterrupt:
-                                return()
-                        if 'error' not in result:
-                                return result["response"] if "response" in result else result
-                                er = False
+                        E = False
+                        try: result = requests.post(url, data=params).json()
+                        except KeyboardInterrupt: return
+                        if 'error' not in result: return result["response"] if "response" in result else result
                         else:
-                                if not er:
-                                        err = result.get('error')
-                                        msg = err.get('error_msg')
-                                        print(msg)
-                                        if msg.find('Validation')>=0:
-                                                print(err.get('redirect_uri'))
-                                        er = True
-                                time.sleep(sleepTime)
+                                err = result.get('error')
+                                msg = err.get('error_msg')
+                                print(msg)
+                                if msg.find('Validation')+1: print(err.get('redirect_uri'))
+                                return
                 except:
                         if not E:
                                 print('E', end='')
                                 E = True
                         time.sleep(sleepTime)
+def get_audio():
+        audio_list = []
+        AU_OFFSET_CONSTANT = 300
+        au_offset = 0
+        au_count = 3000
+        while au_count>0:
+                api_call = call_api('audio.get', {'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
+                if api_call: audio_list_step = api_call.get('items')
+                else: audio_list_step = None
+                if not audio_list_step: break        
+                audio_list = audio_list + audio_list_step
+                au_offset = au_offset + AU_OFFSET_CONSTANT
+                au_count = au_count - AU_OFFSET_CONSTANT
+        def au_adress(audio): return 'audio' + str(audio.get('owner_id')) + '_' + str(audio.get('id'))
+        def au(audio): return audio.get('artist') + ' - ' + audio.get('title')
+        m3u_file = open(str(token_num)+'.m3u', 'w', encoding='utf-8')
+        m3u_file.write('#EXTM3U\n')
+        for audio in audio_list:
+                url = audio.get('url')                
+                m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+au(audio)+'\n#'+au_adress(audio)+'\n'+url[:url.find('?extra')]+'\n')
+        m3u_file.close()
 for token_num in range(len(token_list)):
-        idscash = idscash + [call_api('users.get', {})[0]]
-        lastNviewcash = lastNviewcash + [call_api('notifications.get',{'count': '0'}).get('last_viewed')]
+        api_call = call_api('users.get', {})
+        if api_call: idscash = idscash + [api_call[0]]
+        else: idscash = idscash + [{'last_name': str(token_num), 'first_name': 'token_num', 'id': 0}]
+        api_call = call_api('notifications.get',{'count': '0'})
+        if api_call: lastNviewcash = lastNviewcash + [api_call.get('last_viewed')]
+        else: lastNviewcash = lastNviewcash + [int(time.time())]
         prob=prob+[1]
-print()
+        get_audio()
 token_num = 0
 def cin():
         try:
                 s = input()
                 return(s)
-        except KeyboardInterrupt:
-                exit
+        except KeyboardInterrupt: exit
 def read_mnemonics():
         result = {}
         with open(mnemofile) as f:
@@ -83,23 +98,29 @@ def read_mnemonics():
                         result[key] = value
         f.close()
         return result
-def rus_to_lat(wrong):
+def l(wrong):
+        wrong = wrong.lower().strip()
+        #re.match("^[' 'A-Za-z0-9_-]*$", wrong)
         right = ''
         for wrong_letter in wrong:
-                right_letter = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,._'['йцукенгшщзхъфывапролджэячсмитьбю_'.find(wrong_letter)]
+                if ord(wrong_letter)<128: right_letter = wrong_letter
+                else: right_letter = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,.#_'['йцукенгшщзхъфывапролджэячсмитьбю№_'.find(wrong_letter)]
                 right = right + right_letter
         return right
 def mn(idstring):
-        if idstring in mnemonics: return ['user_id', mnemonics[idstring]]
-        elif idstring.isdigit(): return ['user_id', idstring]
-        elif not re.match("^[' 'A-Za-z0-9_-]*$", idstring): return mn(rus_to_lat(idstring.lower()))
-        else: return ['domain', idstring]
+        idstring = l(idstring)
+        if idstring in mnemonics: return mnemonics[idstring]
+        elif idstring.isdigit(): return idstring
+        else:
+                api_call = call_api('users.get', {'user_ids': idstring})
+                if api_call: return str(api_call[0].get('id'))
+                else: return 0
 def read_ignore():
         result = []
         with open(ignorefile) as f:
                 for line in f:
                         line = line.strip()
-                        result.append(mn(line)[1])
+                        result.append(mn(line))
         f.close()
         return result
 def smiley_hex(c, sh):
@@ -137,7 +158,8 @@ def print_attachments(attache):
                                                 break
                         elif atype=='video':
                                 req = str(cropadress)+'_'+str(stuff.get('access_key'))
-                                printsn(call_api('video.get', {'videos': req}).get('items')[0].get('player'))
+                                api_call = call_api('video.get', {'videos': req}).get('items')
+                                if api_call: printsn(api_call[0].get('player'))
                         else:
                                 url = stuff.get('url')
                                 if url is not None:
@@ -163,15 +185,14 @@ def print_message(message, k):
                         prints('['+str(fwdm.get('user_id'))+']')
                         print_message(fwdm, k+1)                     
 def getHistory(count, offset, print_numbers, uid):
-        if not isinstance(uid, int): uid = call_api('users.get', {'user_ids': uid})[0].get('id')
+        if not isinstance(uid, int): uid = mn(uid)
         unread = False
-        try:
-                history = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid}).get('items')
-        except:
-                return(0)
+        api_call = call_api('messages.getHistory', {'count': count, 'offset': offset, 'user_id': uid})
+        if api_call: history = api_call.get('items')
+        else: return 0
         message={'date': 0}
         inoutchar = ''
-        if history is not None:
+        if history:
                 for message in reversed(history):
                         if not unread and (message.get('read_state')==0):
                                 unread = True
@@ -197,14 +218,17 @@ def check_inbox():
         prev_token_num = token_num
         for token_num in range(len(token_list)):
                 if random.random() > prob[token_num]: continue
-                try:
-                        myname = idscash[token_num]
-                        viewed_time = lastNviewcash[token_num]
-                        notif_resp = call_api('notifications.get',{'start_time': viewed_time})
-                        resp = call_api('messages.getDialogs', {'unread': '1'})
-                        r = notif_resp.get('count')
-                        t = resp.get('count')
-                except:
+                myname = idscash[token_num]
+                viewed_time = lastNviewcash[token_num]
+                notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                resp = call_api('messages.getDialogs', {'unread': '1'})
+                if notif_resp: r = notif_resp.get('count')
+                else:
+                        print(printm)
+                        return(0)
+                if resp: t = resp.get('count')
+                else:
+                        print(printm)
                         return(0)
                 A+=r+t
                 printsn(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
@@ -220,8 +244,8 @@ def check_inbox():
                                                 A-=1
                                                 t-=1
                                                 continue
-                                        respname = call_api('users.get', {'user_ids': uid})[0]
-                                        printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                                        respname = call_api('users.get', {'user_ids': uid})
+                                        if respname: printsn(respname[0].get('first_name')+' '+respname[0].get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                                         getHistory(N, 0, False, uid)
                                 else:
                                         uid = 2000000000 + chat_id
@@ -232,8 +256,7 @@ def check_inbox():
                                         else:
                                                 printsn(str(uid)+' chat '+str(N))
                                                 getHistory(N, 0, False, uid)
-                if (t>0):
-                        printsn("-------")
+                if (t>0): printsn("-------")
                 for x in reversed(notif_resp.get('items')):
                         parent = x.get('parent')
                         xtype = x.get('type')
@@ -246,12 +269,9 @@ def check_inbox():
                                       elif parent.get('photo') is not None:
                                               parent = parent.get('photo')
                                               parent_id = parent.get('owner_id')
-                                      else:
-                                              parent_id = parent.get('owner_id')
-                                if 'photo' in xtype:
-                                      printsn('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
-                                else:
-                                      printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
+                                      else: parent_id = parent.get('owner_id')
+                                if 'photo' in xtype: printsn('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
+                                else: printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                                 printsn(parent.get('text'))
                                 print_attachments(parent.get('attachments'))
                         feedback = x.get('feedback')
@@ -259,8 +279,8 @@ def check_inbox():
                         if whos is not None:
                                 for who in whos:
                                         whuid = who.get('from_id')
-                                        whuidinfo = call_api('users.get', {'user_ids': whuid})[0]
-                                        printsn(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
+                                        whuidinfo = call_api('users.get', {'user_ids': whuid})
+                                        if whuidinfo: printsn(whuidinfo[0].get('first_name')+' '+whuidinfo[0].get('last_name')+' '+str(whuid))
                         comment = feedback.get('text')
                         if comment is None:
                                 printsn(xtype)
@@ -268,6 +288,7 @@ def check_inbox():
                                 printsn(charfilter(comment))
                                 print_attachments(feedback.get('attachments'))
                 printsn("_____________")
+                if random.random()<0.01: get_audio()
         token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
@@ -281,8 +302,6 @@ def main():
                         printm=''
                         time.sleep(waitTime)
                 else:
-                        #sound = pyglet.media.load('lunar.wav')
-                        #sound.play()
                         master=Tk()
                         master.wm_attributes("-topmost", 1)
                         master.wm_state('normal')
@@ -291,6 +310,7 @@ def main():
                         w.pack()
                         master.mainloop()
                         time.sleep(waitTime)
+                        for token_num_i in range(len(token_list)): lastNviewcash[token_num_i] = int(time.time())
                 looping = False
 if __name__ == '__main__':
         main()
