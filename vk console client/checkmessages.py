@@ -206,10 +206,377 @@ def getHistory(count, offset, print_numbers, uid):
                         if print_numbers:
                                 printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
                 if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
+def extra(s):
+         global printm
+         if s.isdigit():
+                 token_num = int(s)
+                 iam()
+                 return(0)												
+         def r(c):
+                 return l(s)==c
+         if r("'"):
+                 return(-2)
+         if r("+"):
+                 #print('[forward messages ids (e.g. 1232,1233,1237) | attachments (e.g. photo123123_123223,audio-34232_23123)]')
+                 s = cin()
+                 if s is None: return(-2)
+                 if r("u"):
+                         s = cin()
+                         if s is None: return(-2)
+                         if s.strip()=='': s='Безымянный.png'
+                         upload_url = call_api('photos.getMessagesUploadServer', {})
+                         if upload_url: upload_stuff = call_api(upload_url.get('upload_url'), s)
+                         else: return(-2)
+                         if upload_stuff: uploaded_photo = call_api('photos.saveMessagesPhoto', upload_stuff)
+                         else: return(-2)
+                         if uploaded_photo: s = 'photo'+str(uploaded_photo[0].get('owner_id'))+'_'+str(uploaded_photo[0].get('id'))
+                         print('\n'+s)
+                 if s[0].isdigit(): forward_messages = s
+                 elif (s[0].lower()=='s')or(s[0].lower()=='ы'): subject = s[2:] #s_The subject of my message
+                 else: attachments = s
+                 s=cin() #no return(0) for message
+                 if s is None: return(-2)
+         if r("~")or r("`"):
+                 s = cin()
+                 if s is None: return(-2)
+                 try: waitTime = int(s)
+                 except: return(-2)
+                 return(0)
+         elif r("n"):
+                 call_api('notifications.markAsViewed', {})
+                 lastNviewcash[token_num] = int(time.time())
+                 print()
+                 return(0)
+         elif r("p"):
+                 print('Set probabilities of token_nums while checkbox')
+                 global prob
+                 prob = [float(input()) for i in range(len(token_list))]
+                 return(0)
+         elif r("e"):                #rasp.yandex.ru/search/suburban/?
+                 x = urllib.request.urlopen('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').read().decode('utf-8')
+                 #x = requests.get('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').text
+                 print(x[x.find('<title>')+7:x.find('</title>')])
+                 l2 = [x[m.start()-5:m.start()] for m in re.finditer(':00&', x)]
+                 l3 = list(map(lambda x, y: x+' - '+y, l2[::2], l2[1::2]))
+                 for r in l3: print(r)
+                 return(0)
+         elif r("w"):
+                 s = cin()
+                 if s is None: return(-2)
+                 wall_owner = mn(s)
+                 if wall_owner is None:
+                         findwall = s.find('wall')
+                         if findwall+1: s = s[findwall:]
+                         s = s.replace('wall','')
+                         wall = call_api('wall.getById',{'posts':s})
+                         if wall is None: return(-2)
+                 else:
+                         print('Now you have to input the number of posts')
+                         s = cin()
+                         if s is None: return(-2)
+                         try: postsN = int(s)
+                         except: return(-2)
+                         api_call = call_api('wall.get', {'owner_id': wall_owner, 'count': postsN})
+                         if api_call: wall = api_call.get('items')
+                         else: return(-2)
+                 printm='\n'
+                 for post in wall:
+                         printsn('wall'+str(post.get('from_id'))+'_'+str(post.get('id'))+'\n\n'+charfilter(post.get('text')))
+                         reposted = post.get('copy_history')
+                         if reposted:
+                                 for reposts in reposted:
+                                         printsn('\t[REPOSTED]')
+                                         printsn('\t'+charfilter(reposts.get('text')))
+                         printsn('\n'+str(post.get('likes').get('count'))+' likes, '+str(post.get('comments').get('count'))+' comments')
+                         print_attachments(post.get('attachments'))
+                         printsn('____')
+                 print(printm)
+                 printm=''
+                 return(0)
+         elif r(":"):
+                 s = cin()
+                 if s is None: return(-2)
+                 if s.find('http')!=0: s='http://'+s
+                 x = requests.get(s)
+                 print(x.text)
+                 return(0)
+         elif r("s"):
+                 s = cin()
+                 if s is None: return(-2)
+                 s = s.strip()
+                 if s in rev_simple_smileys:
+                         os.system('smileys\\'+rev_simple_smileys[s])
+                         return(0)
+                 try: c = int(s)
+                 except:
+                         while (s!='')and not (s[0].isdigit()): s=s[1:]
+                         while (s!='')and not (s[-1].isdigit()): s=s[:-1]
+                         try: c=int(s)
+                         except: return(-2)
+                 h72 = smiley_hex(c,3627804672)
+                 h60 = smiley_hex(c,3627740160)
+                 h0 = smiley_hex(c,0)
+                 if h72 in smileys: os.system('smileys\\'+h72)
+                 elif h60 in smileys: os.system('smileys\\'+h60)
+                 elif h0 in smileys: os.system('smileys\\'+h0)
+                 return(0)
+         elif r("t"):
+                 s = cin()
+                 if s is None: return(-2)
+                 lit = ast.literal_eval(s)
+                 g = call_api(*lit)
+                 print(charfilter(str(g)))
+                 return(0)
+         elif r("l"):
+                 print('type owner_id\ntypes:\npost comment photo audio video note photo_comment video_comment topic_comment sitepage')
+                 s = cin()
+                 if s is None: return(-2)
+                 lobjecttype, what = s.split()
+                 lowner, lid = what.split('_') #ifLiked - likes.delete
+                 print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                 return(0)
+         elif r("v"):
+                 s = cin()
+                 if s is None: return(-2)
+                 v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long', 'adult': '1'})
+                 if v is None: return(-2)
+                 for vid in v.get('items'):
+                         print(vid.get('title'))
+                         print(vid.get('player'))
+                 return(0)
+         elif r("x"):
+                 s = cin() #get the video from a "player"-link
+                 if s is None: return(-2)
+                 x = requests.get(s).text
+                 if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
+                         print('Adult content error')
+                         return(0)
+                 xd = x.find('video_max_hd = ')
+                 try: video_max_hd = int(x[xd+16:xd+17])
+                 except: video_max_hd = 0
+                 hds = ['240', '360', '480', '720', '1080']
+                 video_url = x[x.find('url'+hds[video_max_hd])+7:]
+                 video_url = video_url[:video_url.find('&amp;')]
+                 print(video_url)
+                 return(0)
+         elif r("a"):
+                 if attachments is not None:
+                         add_owner_id, add_audio_id = attachments.split('_')
+                         print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
+                         return(0)
+                 big_audio_flag = s.isupper()
+                 print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget]\n[Number]\n[Search string]')
+                 m3u_flag = True
+                 wget_flag = False
+                 wget_start_num = None
+                 s = cin()
+                 if s is None: return(-2)
+                 if (s.lower()=='here')or(s.lower()=='руку'):
+                         m3u_flag = False
+                         s = cin()
+                         if s is None: return(-2)
+                 if (s[:4].lower()=='wget')or(s[:4].lower()=='цпуе'):
+                         wget_flag = True
+                         try: wget_start_num = int(s[4:])
+                         except: wget_start_num = None
+                         s = cin()
+                         if s is None: return(-2)
+                 if s.isdigit():
+                         au_count = int(s)
+                         s = cin()
+                         if s is None: return(-2)
+                 else:
+                         if m3u_flag: au_count = 1000
+                         else: au_count = 10
+                 if big_audio_flag:
+                         autitle = cin()
+                         if autitle is None: return(-2)
+                         autitle = autitle.strip()
+                 audio_list = []
+                 AU_OFFSET_CONSTANT = 300
+                 au_offset = 0
+                 audioget = s.strip().lower()=='id' 
+                 if s.strip()=='':
+                         audioget = True
+                         s = str(idscash[token_num].get('id'))
+                 elif audioget: s = str(mn(autitle))
+                 if audioget: big_audio_flag = False
+                 while au_count>0:
+                         if audioget:
+                                 api_call = call_api('audio.get', {'owner_id': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
+                                 if api_call: audio_list_step = api_call.get('items')
+                                 else: audio_list_step = None
+                         elif big_audio_flag:
+                                 if autitle=='':
+                                         api_call = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1})
+                                         if api_call: audio_list_step = api_call.get('items')
+                                         else: audio_list_step = None
+                                 else:
+                                         api_call = call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
+                                         if api_call: audio_list_step = api_call.get('items')
+                                         else: audio_list_step = None
+                         else:
+                                 api_call = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
+                                 if api_call: audio_list_step = api_call.get('items')
+                                 else: audio_list_step = None
+                         if not audio_list_step: break        
+                         audio_list = audio_list + audio_list_step
+                         au_offset = au_offset + AU_OFFSET_CONSTANT
+                         au_count = au_count - AU_OFFSET_CONSTANT
+                         print(len(audio_list), end='')
+                 print()
+                 def au_adress(audio): return 'audio' + str(audio.get('owner_id')) + '_' + str(audio.get('id'))
+                 def au(audio): return audio.get('artist') + ' - ' + audio.get('title')
+                 if wget_flag:
+                         wget_filename = 'auwget.bat'
+                         wget_file = open(wget_filename, 'w', encoding='utf-8')
+                         if not s: s = '~'
+                         if wget_start_num is None: aunum = ''
+                         else: wget_start_num -= len(audio_list)
+                         wget_file.write('chcp 65001\nmkdir '+s+'\n')
+                         for audio in audio_list:
+                                 url = audio.get('url')
+                                 aufname = re.sub('"(.*?)"', r'«\1»', au(audio)) # "" to «»
+                                 aufname = re.sub(r'[\\/:*?<>|+\n]','-',aufname) # replace bad characters with -
+                                 if wget_start_num is not None:
+                                         wget_start_num += 1
+                                         aunum = str(wget_start_num)+'_'
+                                 if url!='': wget_file.write('wget '+url[:url.find('?extra')]+' -O "' + s+'\\'+aunum+aufname + '.mp3"\n')
+                         wget_file.write('Del %0 /q\n')
+                         wget_file.close()
+                         os.system(wget_filename)
+                 if m3u_flag:
+                         m3u_file = open('m3u.m3u', 'w', encoding='utf-8')
+                         m3u_file.write('#EXTM3U\n')
+                         for audio in audio_list:
+                                 url = audio.get('url')                
+                                 m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+au(audio)+'\n#'+au_adress(audio)+'\n'+url[:url.find('?extra')]+'\n')
+                         m3u_file.close()
+                 else:
+                         for audio in audio_list:
+                                 if (not big_audio_flag) or ((audio.get('artist').lower()==s.lower())and((audio.get('title').lower()==autitle.lower())or(autitle==''))):
+                                         url = audio.get('url')
+                                         if not big_audio_flag or (autitle==''): print(au(audio))
+                                         print(url[:url.find('?extra')], au_adress(audio))
+                 return(0)
+         elif r("u"):
+                 s = cin()
+                 if s is None: return(-2)
+                 suserid = mn(s)
+                 if not suserid: suserid = l(s)
+                 info = call_api('users.get', {'user_ids': suserid})
+                 if info:
+                         if len(info)>1:
+                                 for user in info: print(user.get('first_name'),user.get('last_name'),user.get('id'))
+                         else:
+                                 print(info[0])
+                                 actif = call_api('messages.getLastActivity', {'user_id': info[0].get('id')})
+                                 if actif:
+                                         onstatus = 'online' if actif.get('online') else 'offline'
+                                         print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
+                 return(0)
+         elif r("f"):
+                 s = cin()
+                 if s is None: return(-2)
+                 friend_id_list = None
+                 if s=='': friend_id_list = call_api('friends.getRecent', {'count': 1000})
+                 elif l(s)=='<' or l(s)==',': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 1})
+                 elif l(s)=='>' or l(s)=='.': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 0})
+                 if friend_id_list:
+                         friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
+                         if friend_list:
+                                 for friend in friend_list:
+                                         try: print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
+                                         except KeyboardInterrupt: break
+                 else:
+                         suserid = mn(s)
+                         if suserid[0]=='-': print(call_api('groups.join', {'group_id': suserid[1:]}))
+                         else: print(call_api('friends.add', {'user_id': suserid})) #domain unavailable
+                 return(0)
+         elif r("q"):
+                 wall_flag = True
+                 userid = 0
+                 s = cin()
+                 if s is None: return(-2)
+         elif r("r"):
+                 api_call = call_api('messages.getDialogs', {'unread': '1'})
+                 if api_call: resmes = api_call.get('items')
+                 else: return(-2)
+                 if (resmes == []): print('-')
+                 else:
+                         for mes in resmes:
+                                 rm = mes.get('message')
+                                 print(rm.get('user_id'), mes.get('unread'), '#'+charfilter(rm.get('body')))
+                 return(0)
+         elif r("i"):
+                 print(ignore)
+                 s = cin()
+                 if s is None: return(-2)
+                 s = s.strip()
+                 if s=='': return(-2)
+                 iuid = mn(s)
+                 if iuid in ignore:
+                         ignore.remove(iuid)
+                         print('temporarily seen')
+                 else:
+                         ignore.append(iuid)
+                         with open(ignorefile, 'a') as f:
+                                 f.write('\n'+s)
+                         f.close()
+                 return(0)
+         elif r("m"):
+                 print(mnemonics)
+                 s = cin()
+                 if s is None: return(-2)
+                 s = s.strip()
+                 if s=='': return(-2)
+                 muserids = cin()
+                 if muserids is None: return(-2)
+                 try: muserid = int(muserids)
+                 except: return(-2)
+                 muserids = str(muserid)
+                 mnemonics[s] = muserids
+                 with open(mnemofile, 'a') as f:
+                         f.write('\n'+s+' '+muserids)
+                 f.close()
+                 return(0)
+         elif r("h"):
+                 print('count, offset, print_numbers, uid')
+                 try:
+                         hcount, hoffset, hprint_numbers, huid = input(), input(), input(), input()
+                 except KeyboardInterrupt:
+                         return(-2)
+                 getHistory(hcount, hoffset, hprint_numbers, huid)
+                 print(printm)
+                 return(0)
+         elif r("d"):
+                 print('DELETE MESSAGES BY IDS.\nInput message ids, separated with commas.')
+                 ids = cin()
+                 if ids is None: return(-2)
+                 api_call = call_api('messages.getById', {'message_ids': ids})
+                 if api_call: delete_list = api_call.get('items')
+                 else: return(-2)
+                 printm = ''
+                 for mes in delete_list:                         
+                         del_uid = str(mes.get('user_id'))
+                         if (mes.get('out')==0): printsn('>'+del_uid)
+                         else: printsn('<'+del_uid)
+                         print_message(mes, 0)
+                 print(printm)
+                 print('DELETE THESE MESSAGES?\nY\\N')
+                 delete_confirmation = cin()
+                 if delete_confirmation is None: return(-2)
+                 if l(delete_confirmation)=='y':
+                         print(call_api('messages.delete', {'message_ids': ids}))
+                 return(0)
+         elif r("z"):
+                 s = cin()
+                 if s is None: return(-2)
+                 print(l(s))
+def iam(): print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+' to '+prevuserid+':')
 def messaging():
         global token_num, printm, waitTime, prevuserid
         #prevuserid = str(idscash[token_num].get('id'))
-        def iam(): print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+' to '+prevuserid+':')
         iam()
         while True:
                 m = ''
@@ -225,364 +592,9 @@ def messaging():
                                 forward_messages = None
                                 subject = None
                                 if (len(s)==1):
-                                        if s.isdigit():
-                                                token_num = int(s)
-                                                iam()
-                                                continue												
-                                        def r(c):
-                                                return l(s)==c
-                                        if r("'"):
-                                                return(-1)
-                                        if r("+"):
-                                                #print('[forward messages ids (e.g. 1232,1233,1237) | attachments (e.g. photo123123_123223,audio-34232_23123)]')
-                                                s = cin()
-                                                if s is None: return(0)
-                                                if r("u"):
-                                                        s = cin()
-                                                        if s is None: return(0)
-                                                        if s.strip()=='': s='Безымянный.png'
-                                                        upload_url = call_api('photos.getMessagesUploadServer', {})
-                                                        if upload_url: upload_stuff = call_api(upload_url.get('upload_url'), s)
-                                                        else: return(0)
-                                                        if upload_stuff: uploaded_photo = call_api('photos.saveMessagesPhoto', upload_stuff)
-                                                        else: return(0)
-                                                        if uploaded_photo: s = 'photo'+str(uploaded_photo[0].get('owner_id'))+'_'+str(uploaded_photo[0].get('id'))
-                                                        print('\n'+s)
-                                                if s[0].isdigit(): forward_messages = s
-                                                elif (s[0].lower()=='s')or(s[0].lower()=='ы'): subject = s[2:] #s_The subject of my message
-                                                else: attachments = s
-                                                s=cin() #no continue for message
-                                                if s is None: return(0)
-                                        if r("~")or r("`"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                try: waitTime = int(s)
-                                                except: return(0)
-                                                continue
-                                        elif r("n"):
-                                                call_api('notifications.markAsViewed', {})
-                                                lastNviewcash[token_num] = int(time.time())
-                                                print()
-                                                continue
-                                        elif r("p"):
-                                                print('Set probabilities of token_nums while checkbox')
-                                                global prob
-                                                prob = [float(input()) for i in range(len(token_list))]
-                                                continue
-                                        elif r("e"):                #rasp.yandex.ru/search/suburban/?
-                                                x = urllib.request.urlopen('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').read().decode('utf-8')
-                                                #x = requests.get('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').text
-                                                print(x[x.find('<title>')+7:x.find('</title>')])
-                                                l2 = [x[m.start()-5:m.start()] for m in re.finditer(':00&', x)]
-                                                l3 = list(map(lambda x, y: x+' - '+y, l2[::2], l2[1::2]))
-                                                for r in l3: print(r)
-                                                continue
-                                        elif r("w"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                wall_owner = mn(s)
-                                                print('Now you have to input the number of posts')
-                                                s = cin()
-                                                if s is None: return(0)
-                                                try: postsN = int(s)
-                                                except: return(0)
-                                                api_call = call_api('wall.get', {'owner_id': wall_owner, 'count': postsN})
-                                                if api_call: wall = api_call.get('items')
-                                                else: return(0)
-                                                printm='\n'
-                                                for post in wall:
-                                                        printsn('wall'+str(post.get('from_id'))+'_'+str(post.get('id'))+'\n\n'+charfilter(post.get('text')))
-                                                        reposted = post.get('copy_history')
-                                                        if reposted:
-                                                                for reposts in reposted:
-                                                                        printsn('\t[REPOSTED]')
-                                                                        printsn('\t'+charfilter(reposts.get('text')))
-                                                        printsn('\n'+str(post.get('likes').get('count'))+' likes, '+str(post.get('comments').get('count'))+' comments')
-                                                        print_attachments(post.get('attachments'))
-                                                        printsn('____')
-                                                print(printm)
-                                                printm=''
-                                                continue
-                                        elif r(":"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                if s.find('http')!=0: s='http://'+s
-                                                x = requests.get(s)
-                                                print(x.text)
-                                                continue
-                                        elif r("s"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                s = s.strip()
-                                                if s in rev_simple_smileys:
-                                                        os.system('smileys\\'+rev_simple_smileys[s])
-                                                        continue
-                                                try: c = int(s)
-                                                except:
-                                                        while (s!='')and not (s[0].isdigit()): s=s[1:]
-                                                        while (s!='')and not (s[-1].isdigit()): s=s[:-1]
-                                                        try: c=int(s)
-                                                        except: return(0)
-                                                h72 = smiley_hex(c,3627804672)
-                                                h60 = smiley_hex(c,3627740160)
-                                                h0 = smiley_hex(c,0)
-                                                if h72 in smileys: os.system('smileys\\'+h72)
-                                                elif h60 in smileys: os.system('smileys\\'+h60)
-                                                elif h0 in smileys: os.system('smileys\\'+h0)
-                                                continue
-                                        elif r("t"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                lit = ast.literal_eval(s)
-                                                g = call_api(*lit)
-                                                print(charfilter(str(g)))
-                                                continue
-                                        elif r("l"):
-                                                print('type owner_id\ntypes:\npost comment photo audio video note photo_comment video_comment topic_comment sitepage')
-                                                s = cin()
-                                                if s is None: return(0)
-                                                lobjecttype, what = s.split()
-                                                lowner, lid = what.split('_') #ifLiked - likes.delete
-                                                print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
-                                                continue
-                                        elif r("v"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long', 'adult': '1'})
-                                                if v is None: return(0)
-                                                for vid in v.get('items'):
-                                                        print(vid.get('title'))
-                                                        print(vid.get('player'))
-                                                continue
-                                        elif r("x"):
-                                                s = cin() #get the video from a "player"-link
-                                                if s is None: return(0)
-                                                x = requests.get(s).text
-                                                if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
-                                                        print('Adult content error')
-                                                        continue
-                                                xd = x.find('video_max_hd = ')
-                                                try: video_max_hd = int(x[xd+16:xd+17])
-                                                except: video_max_hd = 0
-                                                hds = ['240', '360', '480', '720', '1080']
-                                                video_url = x[x.find('url'+hds[video_max_hd])+7:]
-                                                video_url = video_url[:video_url.find('&amp;')]
-                                                print(video_url)
-                                                continue
-                                        elif r("a"):
-                                                if attachments is not None:
-                                                        add_owner_id, add_audio_id = attachments.split('_')
-                                                        print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
-                                                        continue
-                                                big_audio_flag = s.isupper()
-                                                print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget]\n[Number]\n[Search string]')
-                                                m3u_flag = True
-                                                wget_flag = False
-                                                wget_start_num = None
-                                                s = cin()
-                                                if s is None: return(0)
-                                                if (s.lower()=='here')or(s.lower()=='руку'):
-                                                        m3u_flag = False
-                                                        s = cin()
-                                                        if s is None: return(0)
-                                                if (s[:4].lower()=='wget')or(s[:4].lower()=='цпуе'):
-                                                        wget_flag = True
-                                                        try: wget_start_num = int(s[4:])
-                                                        except: wget_start_num = None
-                                                        s = cin()
-                                                        if s is None: return(0)
-                                                if s.isdigit():
-                                                        au_count = int(s)
-                                                        s = cin()
-                                                        if s is None: return(0)
-                                                else:
-                                                        if m3u_flag: au_count = 1000
-                                                        else: au_count = 10
-                                                if big_audio_flag:
-                                                        autitle = cin()
-                                                        if autitle is None: return(0)
-                                                        autitle = autitle.strip()
-                                                audio_list = []
-                                                AU_OFFSET_CONSTANT = 300
-                                                au_offset = 0
-                                                audioget = s.strip().lower()=='id' 
-                                                if s.strip()=='':
-                                                        audioget = True
-                                                        s = str(idscash[token_num].get('id'))
-                                                elif audioget: s = str(mn(autitle))
-                                                if audioget: big_audio_flag = False
-                                                while au_count>0:
-                                                        if audioget:
-                                                                api_call = call_api('audio.get', {'owner_id': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
-                                                                if api_call: audio_list_step = api_call.get('items')
-                                                                else: audio_list_step = None
-                                                        elif big_audio_flag:
-                                                                if autitle=='':
-                                                                        api_call = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset, 'performer_only': 1})
-                                                                        if api_call: audio_list_step = api_call.get('items')
-                                                                        else: audio_list_step = None
-                                                                else:
-                                                                        api_call = call_api('audio.search', {'q': s+' '+autitle, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
-                                                                        if api_call: audio_list_step = api_call.get('items')
-                                                                        else: audio_list_step = None
-                                                        else:
-                                                                api_call = call_api('audio.search', {'q': s, 'count': min(au_count, AU_OFFSET_CONSTANT), 'offset': au_offset})
-                                                                if api_call: audio_list_step = api_call.get('items')
-                                                                else: audio_list_step = None
-                                                        if not audio_list_step: break        
-                                                        audio_list = audio_list + audio_list_step
-                                                        au_offset = au_offset + AU_OFFSET_CONSTANT
-                                                        au_count = au_count - AU_OFFSET_CONSTANT
-                                                        print(len(audio_list), end='')
-                                                print()
-                                                def au_adress(audio): return 'audio' + str(audio.get('owner_id')) + '_' + str(audio.get('id'))
-                                                def au(audio): return audio.get('artist') + ' - ' + audio.get('title')
-                                                if wget_flag:
-                                                        wget_filename = 'auwget.bat'
-                                                        wget_file = open(wget_filename, 'w', encoding='utf-8')
-                                                        if not s: s = '~'
-                                                        if wget_start_num is None: aunum = ''
-                                                        else: wget_start_num -= len(audio_list)
-                                                        wget_file.write('chcp 65001\nmkdir '+s+'\n')
-                                                        for audio in audio_list:
-                                                                url = audio.get('url')
-                                                                aufname = re.sub('"(.*?)"', r'«\1»', au(audio)) # "" to «»
-                                                                aufname = re.sub(r'[\\/:*?<>|+\n]','-',aufname) # replace bad characters with -
-                                                                if wget_start_num is not None:
-                                                                        wget_start_num += 1
-                                                                        aunum = str(wget_start_num)+'_'
-                                                                if url!='': wget_file.write('wget '+url[:url.find('?extra')]+' -O "' + s+'\\'+aunum+aufname + '.mp3"\n')
-                                                        wget_file.write('Del %0 /q\n')
-                                                        wget_file.close()
-                                                        os.system(wget_filename)
-                                                if m3u_flag:
-                                                        m3u_file = open('m3u.m3u', 'w', encoding='utf-8')
-                                                        m3u_file.write('#EXTM3U\n')
-                                                        for audio in audio_list:
-                                                                url = audio.get('url')                
-                                                                m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+au(audio)+'\n#'+au_adress(audio)+'\n'+url[:url.find('?extra')]+'\n')
-                                                        m3u_file.close()
-                                                else:
-                                                        for audio in audio_list:
-                                                                if (not big_audio_flag) or ((audio.get('artist').lower()==s.lower())and((audio.get('title').lower()==autitle.lower())or(autitle==''))):
-                                                                        url = audio.get('url')
-                                                                        if not big_audio_flag or (autitle==''): print(au(audio))
-                                                                        print(url[:url.find('?extra')], au_adress(audio))
-                                                continue
-                                        elif r("u"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                suserid = mn(s)
-                                                if not suserid: suserid = l(s)
-                                                info = call_api('users.get', {'user_ids': suserid})
-                                                if info:
-                                                        if len(info)>1:
-                                                                for user in info: print(user.get('first_name'),user.get('last_name'),user.get('id'))
-                                                        else:
-                                                                print(info[0])
-                                                                actif = call_api('messages.getLastActivity', {'user_id': info[0].get('id')})
-                                                                if actif:
-                                                                        onstatus = 'online' if actif.get('online') else 'offline'
-                                                                        print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
-                                                continue
-                                        elif r("f"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                friend_id_list = None
-                                                if s=='': friend_id_list = call_api('friends.getRecent', {'count': 1000})
-                                                elif l(s)=='<' or l(s)==',': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 1})
-                                                elif l(s)=='>' or l(s)=='.': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 0})
-                                                if friend_id_list:
-                                                        friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
-                                                        if friend_list:
-                                                                for friend in friend_list:
-                                                                        try: print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
-                                                                        except KeyboardInterrupt: break
-                                                else:
-                                                        suserid = mn(s)
-                                                        if suserid[0]=='-': print(call_api('groups.join', {'group_id': suserid[1:]}))
-                                                        else: print(call_api('friends.add', {'user_id': suserid})) #domain unavailable
-                                                continue
-                                        elif r("q"):
-                                                wall_flag = True
-                                                userid = 0
-                                                s = cin()
-                                                if s is None: return(0)
-                                        elif r("r"):
-                                                api_call = call_api('messages.getDialogs', {'unread': '1'})
-                                                if api_call: resmes = api_call.get('items')
-                                                else: return(0)
-                                                if (resmes == []): print('-')
-                                                else:
-                                                        for mes in resmes:
-                                                                rm = mes.get('message')
-                                                                print(rm.get('user_id'), mes.get('unread'), '#'+charfilter(rm.get('body')))
-                                                continue
-                                        elif r("i"):
-                                                print(ignore)
-                                                s = cin()
-                                                if s is None: return(0)
-                                                s = s.strip()
-                                                if s=='': return(0)
-                                                iuid = mn(s)
-                                                if iuid in ignore:
-                                                        ignore.remove(iuid)
-                                                        print('temporarily seen')
-                                                else:
-                                                        ignore.append(iuid)
-                                                        with open(ignorefile, 'a') as f:
-                                                                f.write('\n'+s)
-                                                        f.close()
-                                                continue
-                                        elif r("m"):
-                                                print(mnemonics)
-                                                s = cin()
-                                                if s is None: return(0)
-                                                s = s.strip()
-                                                if s=='': return(0)
-                                                muserids = cin()
-                                                if muserids is None: return(0)
-                                                try: muserid = int(muserids)
-                                                except: return(0)
-                                                muserids = str(muserid)
-                                                mnemonics[s] = muserids
-                                                with open(mnemofile, 'a') as f:
-                                                        f.write('\n'+s+' '+muserids)
-                                                f.close()
-                                                continue
-                                        elif r("h"):
-                                                print('count, offset, print_numbers, uid')
-                                                try:
-                                                        hcount, hoffset, hprint_numbers, huid = input(), input(), input(), input()
-                                                except KeyboardInterrupt:
-                                                        return(0)
-                                                getHistory(hcount, hoffset, hprint_numbers, huid)
-                                                print(printm)
-                                                continue
-                                        elif r("d"):
-                                                print('DELETE MESSAGES BY IDS.\nInput message ids, separated with commas.')
-                                                ids = cin()
-                                                if ids is None: return(0)
-                                                api_call = call_api('messages.getById', {'message_ids': ids})
-                                                if api_call: delete_list = api_call.get('items')
-                                                else: return(0)
-                                                printm = ''
-                                                for mes in delete_list:                                                        
-                                                        del_uid = str(mes.get('user_id'))
-                                                        if (mes.get('out')==0): printsn('>'+del_uid)
-                                                        else: printsn('<'+del_uid)
-                                                        print_message(mes, 0)
-                                                print(printm)
-                                                print('DELETE THESE MESSAGES?\nY\\N')
-                                                delete_confirmation = cin()
-                                                if delete_confirmation is None: return(0)
-                                                if l(delete_confirmation)=='y':
-                                                        print(call_api('messages.delete', {'message_ids': ids}))
-                                                continue
-                                        elif r("z"):
-                                                s = cin()
-                                                if s is None: return(0)
-                                                print(l(s))
+                                    resp = extra(s)
+                                    if resp: return resp+1
+                                    else: continue
                         sharp = s.find('#')
                         Nsign = s.find('№')
                         if (Nsign>=0)and((Nsign<sharp)or(sharp<0)): sharp = Nsign
