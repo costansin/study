@@ -207,7 +207,7 @@ def getHistory(count, offset, print_numbers, uid):
                                 printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
                 if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
 def extra(s):
-         global printm
+         global printm, waitTime, token_num
          if s.isdigit():
                  token_num = int(s)
                  iam()
@@ -575,7 +575,7 @@ def extra(s):
                  print(l(s))
 def iam(): print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+' to '+prevuserid+':')
 def messaging():
-        global token_num, printm, waitTime, prevuserid
+        global token_num, printm, prevuserid
         #prevuserid = str(idscash[token_num].get('id'))
         iam()
         while True:
