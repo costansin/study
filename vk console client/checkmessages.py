@@ -80,7 +80,7 @@ def read_mnemonics():
         with open(mnemofile) as f:
                 for line in f:
                         key, value = line.split()
-                        result[key] = value
+                        result[key] = int(value)
         return result
 def l(wrong):
         wrong = wrong.lower().strip()
@@ -94,8 +94,9 @@ def l(wrong):
 def mn(idstring):
         idstring = l(idstring)
         if idstring in mnemonics: return mnemonics[idstring]
-        elif idstring.isdigit(): return idstring
-        else: return #api_call = call_api('users.get', {'user_ids': idstring}) #if api_call: return str(api_call[0].get('id')) #else: return '0'
+        else:
+                try: return int(idstring)
+                except: return #api_call = call_api('users.get', {'user_ids': idstring}) #if api_call: return str(api_call[0].get('id')) #else: return '0'
 def read_ignore():
         result = []
         with open(ignorefile) as f:
@@ -376,7 +377,7 @@ def messaging():
                                                 print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
                                                 continue
                                         big_audio_flag = s.isupper()
-                                        print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget]\n[Number]\n[Search string]')
+                                        print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget][start num]\n[Number]\n[Search string]')
                                         m3u_flag = True
                                         wget_flag = False
                                         wget_start_num = None
@@ -455,7 +456,10 @@ def messaging():
                                         if not suserid: suserid = l(s)
                                         info = call_api('users.get', {'user_ids': suserid})
                                         if info:
-                                                for user in info: print(user.get('first_name'),user.get('last_name'),user.get('id'))
+                                                for user in info:
+                                                        deactif = user.get('deactivated')
+                                                        if deactif is None: deactif = ''
+                                                        print(user.get('first_name'),user.get('last_name'),user.get('id'),deactif)
                                                 if len(info)==1:
                                                         actif = call_api('messages.getLastActivity', {'user_id': info[0].get('id')})
                                                         if actif:
@@ -463,12 +467,19 @@ def messaging():
                                                                 print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
                                         continue
                                 elif r("f"):
+                                        print("'' | > | < | f | number")
                                         s = cin()
                                         if s is None: return(0)
                                         friend_id_list = None
                                         if s=='': friend_id_list = call_api('friends.getRecent', {'count': 1000})
                                         elif l(s)=='<' or l(s)==',': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 1})
                                         elif l(s)=='>' or l(s)=='.': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 0})
+                                        elif l(s)=='f':
+                                                s = cin()
+                                                if s is None: return(0)
+                                                t = mn(s)
+                                                if t<0: friend_id_list = call_api('groups.getMembers', {'group_id': -t, 'count': 1000, 'sort': 'time_desc'})
+                                                else: friend_id_list = call_api('friends.get', {'user_id': t, 'count': 1000})
                                         if friend_id_list:
                                                 friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
                                                 if friend_list:
@@ -477,7 +488,7 @@ def messaging():
                                                                 except KeyboardInterrupt: break
                                         else:
                                                 suserid = mn(s)
-                                                if suserid[0]=='-': print(call_api('groups.join', {'group_id': suserid[1:]}))
+                                                if suserid<0: print(call_api('groups.join', {'group_id': -suserid}))
                                                 else: print(call_api('friends.add', {'user_id': suserid})) #domain unavailable
                                         continue
                                 elif r("b"): #makes you online!
@@ -578,10 +589,10 @@ def messaging():
                 print(call_api('wall.post', {'message': m, 'attachments': attachments}))
                 return(0)
         if userid is None: return(0)
-        if (userid[0]=='-'):
+        if userid<0:
                  print(call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}))
                  return(0)
-        if (m==''): iam()
+        if (m==''): return(0)
         elif (m=='\n')and(attachments is None)and(forward_messages is None):
                 call_api('messages.markAsRead', {'peer_id': userid})
                 printm='\n'
@@ -600,9 +611,9 @@ def messaging():
                         print(printm)
                         printm = ''
                 else:
-                        if len(userid)>=10:
+                        if userid>=2000000000:
                                 meth = 'chat_id'
-                                userid = str(int(userid)-2000000000)
+                                userid = userid-2000000000
                         else: meth = 'user_id'
                         out_flag = l(m[-1])=='#'
                         if out_flag: m=m[:-1]
@@ -612,6 +623,8 @@ def messaging():
                                 confirmation = cin()
                                 if confirmation is None or l(confirmation)!="all is well":
                                         print("resend it to youself, yeah? hah")
+                                        confirmation = cin()
+                                        if confirmation is None: return(0)
                                         userid = idscash[token_num].get('id')
                         call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                         getHistory(10, False, userid)
