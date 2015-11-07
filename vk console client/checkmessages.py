@@ -53,7 +53,7 @@ for token_num in range(len(token_list)):
         else: lastNviewcash = lastNviewcash + [int(time.time())]
         prob=prob+[1]
 token_num = 0
-prevuserid = str(idscash[token_num].get('id'))
+prevuserid = idscash[token_num].get('id')
 print()
 def get_long_list(method, params, l_count, OFFSET_CONSTANT):
         l_offset = 0
@@ -193,7 +193,7 @@ def getHistory(count, print_numbers, uid):
                         if print_numbers:
                                 printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
                 if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
-def iam(): print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+' to '+prevuserid+':')
+def iam(): print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+' to '+str(prevuserid)+':')
 def messaging():
         global token_num, printm, waitTime, prevuserid
         iam()
@@ -408,10 +408,10 @@ def messaging():
                                         audioget = s.strip().lower()=='id' 
                                         if s.strip()=='':
                                                 audioget = True
-                                                s = str(idscash[token_num].get('id'))
-                                        elif audioget: s = str(mn(autitle))
+                                                t = idscash[token_num].get('id')
+                                        elif audioget: t = mn(autitle)
                                         if audioget: big_audio_flag = False
-                                        if audioget: audio_list = get_long_list('audio.get', {'owner_id': s}, au_count, AU_OFFSET_CONSTANT)
+                                        if audioget: audio_list = get_long_list('audio.get', {'owner_id': t}, au_count, AU_OFFSET_CONSTANT)
                                         elif big_audio_flag:
                                                 if autitle=='': audio_list = get_long_list('audio.search', {'q': s, 'performer_only': 1}, au_count, AU_OFFSET_CONSTANT)
                                                 else: audio_list = get_long_list('audio.search', {'q': s+' '+autitle}, au_count, AU_OFFSET_CONSTANT)
@@ -531,7 +531,7 @@ def messaging():
                                         try: muserid = int(muserids)
                                         except: return(0)
                                         muserids = str(muserid)
-                                        mnemonics[s] = muserids
+                                        mnemonics[s] = muserid
                                         with open(mnemofile, 'a') as f: f.write('\n'+s+' '+muserids)
                                         continue
                                 elif r("h"):
