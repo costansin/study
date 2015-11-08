@@ -294,12 +294,16 @@ def check_inbox():
 def main():
         global printm, mnemonics, ignore, waitTime, looping
         mnemonics = read_mnemonics()
+        timestump = time.time()
         ignore = read_ignore()
         while True:
                 printm=''
                 looping = True
                 while (check_inbox()==0):
                         printm=''
+                        newtimestump = time.time()
+                        if newtimestump - timestump > 7200: get_audio()
+                        timestump = newtimestump
                         time.sleep(waitTime)
                 else:
                         master=Tk()

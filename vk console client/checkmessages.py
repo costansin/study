@@ -112,7 +112,7 @@ def charfilter(s):
                 ch = ord(c)
                 if ch<8617: r+=c
                 elif ch in simple_smileys: r+=simple_smileys[ch]+' '
-                else: r+='&#'+str(ch)+';'
+                else: r+='&#'+str(ch)+'; '
         return r
 def prints(s):
         global printm
@@ -315,22 +315,23 @@ def messaging():
                                 elif r("s"):
                                         s = cin()
                                         if s is None: return(0)
-                                        s = s.strip()
-                                        if s in rev_simple_smileys:
-                                                os.system('smileys\\'+rev_simple_smileys[s])
-                                                continue
-                                        try: c = int(s)
-                                        except:
-                                                while (s!='')and not (s[0].isdigit()): s=s[1:]
-                                                while (s!='')and not (s[-1].isdigit()): s=s[:-1]
-                                                try: c=int(s)
-                                                except: return(0)
-                                        h72 = smiley_hex(c,3627804672)
-                                        h60 = smiley_hex(c,3627740160)
-                                        h0 = smiley_hex(c,0)
-                                        if h72 in smileys: os.system('smileys\\'+h72)
-                                        elif h60 in smileys: os.system('smileys\\'+h60)
-                                        elif h0 in smileys: os.system('smileys\\'+h0)
+                                        y = s.split(" ")
+                                        for s in y:
+                                                if s in rev_simple_smileys:
+                                                        os.system('smileys\\'+rev_simple_smileys[s])
+                                                        continue
+                                                try: c = int(s)
+                                                except:
+                                                        while (s!='')and not (s[0].isdigit()): s=s[1:]
+                                                        while (s!='')and not (s[-1].isdigit()): s=s[:-1]
+                                                        try: c=int(s)
+                                                        except: return(0)
+                                                h72 = smiley_hex(c,3627804672)
+                                                h60 = smiley_hex(c,3627740160)
+                                                h0 = smiley_hex(c,0)
+                                                if h72 in smileys: os.system('smileys\\'+h72)
+                                                elif h60 in smileys: os.system('smileys\\'+h60)
+                                                elif h0 in smileys: os.system('smileys\\'+h0)
                                         continue
                                 elif r("t"):
                                         s = cin()
@@ -660,7 +661,7 @@ def check_inbox():
                                 mes = x.get('message')
                                 chat_id = mes.get('chat_id')
                                 if chat_id is None: #check dialogue is not a chat
-                                        uid = str(mes.get('user_id'))
+                                        uid = mes.get('user_id')
                                         if uid in ignore:
                                                 A-=1
                                                 t-=1
@@ -670,7 +671,7 @@ def check_inbox():
                                         getHistory(N, False, uid)
                                 else:
                                         uid = 2000000000 + chat_id
-                                        if str(uid) in ignore:
+                                        if uid in ignore:
                                                 A-=1
                                                 t-=1
                                                 call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}) #autoread
