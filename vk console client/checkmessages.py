@@ -8,6 +8,7 @@ with open('token_file.txt', 'r') as token_file: token_list = [token[:-1] for tok
 smileys = os.listdir('smileys')
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
+smiley = re.compile('|'.join([re.escape(sm) for sm in rev_simple_smileys])+r'|\d+') #warning: all numbers are smileys!
 def call_api(method, params):
         #print(method, params)
         #time.sleep(sleepTime)
@@ -112,7 +113,7 @@ def charfilter(s):
                 ch = ord(c)
                 if ch<8617: r+=c
                 elif ch in simple_smileys: r+=simple_smileys[ch]+' '
-                else: r+='&#'+str(ch)+'; '
+                else: r+='&#'+str(ch)+';'
         return r
 def prints(s):
         global printm
@@ -315,7 +316,7 @@ def messaging():
                                 elif r("s"):
                                         s = cin()
                                         if s is None: return(0)
-                                        y = s.split(" ")
+                                        y = smiley.findall(s)
                                         for s in y:
                                                 if s in rev_simple_smileys:
                                                         os.system('smileys\\'+rev_simple_smileys[s])
@@ -468,7 +469,7 @@ def messaging():
                                                                 print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
                                         continue
                                 elif r("f"):
-                                        print("'' | > | < | f | number")
+                                        print("'' | > | < | F | number")
                                         s = cin()
                                         if s is None: return(0)
                                         friend_id_list = None
