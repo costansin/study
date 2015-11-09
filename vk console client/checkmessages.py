@@ -1,5 +1,5 @@
 # -*- coding: utf-8
-import requests, time, datetime, ast, os, re, random, urllib.request
+import requests, time, datetime, ast, os, re, random
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime, waitTime = 0.34, 53
@@ -255,11 +255,13 @@ def messaging():
                                         prob = [float(input()) for i in range(len(token_list))]
                                         continue
                                 elif r("e"):                #rasp.yandex.ru/search/suburban/?
-                                        x = urllib.request.urlopen('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').read().decode('utf-8')
-                                        #x = requests.get('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;').text
+                                        r = requests.get('https://rasp.yandex.ru/informers/search/?fromId=s9600721&amp;toId=s9601728&amp;')
+                                        r.encoding = 'UTF-8'
+                                        x = r.text
                                         print(x[x.find('<title>')+7:x.find('</title>')])
                                         l2 = [x[m.start()-5:m.start()] for m in re.finditer(':00&', x)]
-                                        l3 = list(map(lambda x, y: x+' - '+y, l2[::2], l2[1::2]))
+                                        stations = [st[st.find('>')+1:st.find('<')].replace('\xa0',' ') for st in re.findall(r'overflow-inner.*?div',x)]
+                                        l3 = list(map(lambda z, x, y: x+' - '+y+' - '+z, stations[::], l2[::2], l2[1::2]))
                                         for r in l3: print(r)
                                         continue
                                 elif r("w"):
