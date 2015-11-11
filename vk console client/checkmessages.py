@@ -471,6 +471,9 @@ def messaging():
                                                         if actif:
                                                                 onstatus = 'online' if actif.get('online') else 'offline'
                                                                 print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
+                                        else:
+                                                info = call_api('utils.resolveScreenName', {'screen_name': suserid})
+                                                if info: print(info.get('type'), info.get('object_id'))
                                         continue
                                 elif r("f"):
                                         print("'' | > | < | F | number")
@@ -573,6 +576,15 @@ def messaging():
                                         s = cin()
                                         if s is None: return(0)
                                         print(l(s))
+                                        continue
+                                elif r("g"):
+                                        site = 'https://yandex.ru/internet' #'http://jsonip.com' ip = r.json()['ip']
+                                        r = requests.get(site)
+                                        r.encoding = 'UTF-8'
+                                        x = r.text
+                                        p = x.find('Поздравляем') #region = re.findall(r'Регион.*?\<\/li\>', x)
+                                        inf = x[p:p+163] #if region is not None: print(region[0][:-12].replace('</div><span class="data__item-content">',' '))
+                                        print(inf.replace('strong','').replace('/', '').replace('<>', ''))
                                         continue
                                 elif r("q"): return(-3)
                 sharp = s.find('#')
