@@ -446,8 +446,9 @@ def messaging():
                                                 with open('m3u.m3u', 'w', encoding='utf-8') as m3u_file:
                                                         m3u_file.write('#EXTM3U\n')
                                                         for audio in audio_list:
-                                                                url = audio.get('url')                
-                                                                m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+au(audio)+'\n#'+au_adress(audio)+'\n'+url[:url.find('?extra')]+'\n')
+                                                                if (not big_audio_flag) or ((audio.get('artist').lower()==s.lower())and((audio.get('title').lower()==autitle.lower())or(autitle==''))):
+                                                                        url = audio.get('url')                
+                                                                        m3u_file.write('#EXTINF:'+str(audio.get('duration'))+', '+au(audio)+'\n#'+au_adress(audio)+'\n'+url[:url.find('?extra')]+'\n')
                                         else:
                                                 for audio in audio_list:
                                                         if (not big_audio_flag) or ((audio.get('artist').lower()==s.lower())and((audio.get('title').lower()==autitle.lower())or(autitle==''))):
