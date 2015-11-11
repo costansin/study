@@ -404,15 +404,16 @@ def messaging():
                                                 s = cin()
                                                 if s is None: return(0)
                                         else:
-                                                if m3u_flag: au_count = 1000
+                                                if m3u_flag: au_count = 3000
                                                 else: au_count = 10
                                         if big_audio_flag:
                                                 autitle = cin()
                                                 if autitle is None: return(0)
                                                 autitle = autitle.strip()
+                                        s = s.strip().lower()
                                         audio_list = []
-                                        audioget = s.strip().lower()=='id' 
-                                        if s.strip()=='':
+                                        audioget = s=='id' 
+                                        if not s:
                                                 audioget = True
                                                 t = idscash[token_num].get('id')
                                         elif audioget: t = mn(autitle)
@@ -443,7 +444,9 @@ def messaging():
                                                         wget_file.write('Del %0 /q\n')
                                                 os.system(wget_filename)
                                         if m3u_flag:
-                                                with open('m3u.m3u', 'w', encoding='utf-8') as m3u_file:
+                                                if audioget and not s: m3uname = str(token_num)
+                                                else: m3uname = 'm3u'
+                                                with open(m3uname+'.m3u', 'w', encoding='utf-8') as m3u_file:
                                                         m3u_file.write('#EXTM3U\n')
                                                         for audio in audio_list:
                                                                 if (not big_audio_flag) or ((audio.get('artist').lower()==s.lower())and((audio.get('title').lower()==autitle.lower())or(autitle==''))):
