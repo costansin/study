@@ -3,9 +3,9 @@ import requests, time, datetime, ast, os, re, random
 from tkinter import *
 #https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime, waitTime = 0.34, 53
-INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscash, lastNviewcash, prob = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], [], []
-with open('token_file.txt', 'r') as token_file: token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
-with open('rasp.ya.txt', 'r') as raspya_file: raspyadress = [a for a in raspya_file.readlines() if a[0]!='#'] #start line with # to make it comment
+INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscache, lastNviewcache, prob, token_num = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], [], [], 0
+with open(tokenfile, 'r') as token_file: token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
+with open(raspyafile, 'r') as raspya_file: raspyadress = [a for a in raspya_file.readlines() if a[0]!='#'] #start line with # to make it comment
 smileys = os.listdir('smileys')
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
@@ -46,17 +46,33 @@ def call_api(method, params):
                                 print('E', end='')
                                 E = True
                         time.sleep(sleepTime)
-for token_num in range(len(token_list)):
-        api_call = call_api('users.get', {})
-        if api_call: idscash = idscash + [api_call[0]]
-        else: idscash = idscash + [{'last_name': str(token_num), 'first_name': 'token_num', 'id': 0}]
-        api_call = call_api('notifications.get',{'count': '0'})
-        if api_call: lastNviewcash = lastNviewcash + [api_call.get('last_viewed')]
-        else: lastNviewcash = lastNviewcash + [int(time.time())]
-        prob=prob+[1]
-token_num = 0
-prevuserid = idscash[token_num].get('id')
-print()
+def getcache():
+        global token_num, idscache, lastNviewcache, prob, prevuserid
+        with open(cachefile, 'r') as cache_file:
+                i, l, p, t, r = cache_file.readlines()
+                idscache, lastNviewcache, prob, token_num, prevuserid = ast.literal_eval(i), ast.literal_eval(l), ast.literal_eval(p), int(t), ast.literal_eval(r)
+def saveinstance():
+        with open(cachefile, 'w') as cache_file:
+                cache_file.write(str(idscache)+'\n')
+                cache_file.write(str(lastNviewcache)+'\n')
+                cache_file.write(str(prob)+'\n')
+                cache_file.write(str(token_num)+'\n')
+                cache_file.write(str(prevuserid)+'\n')
+def reset():
+        global token_num, idscache, lastNviewcache, prob, prevuserid
+        for token_num in range(len(token_list)):
+                api_call = call_api('users.get', {})
+                if api_call: idscache = idscache + [api_call[0]]
+                else: idscache = idscache + [{'last_name': str(token_num), 'first_name': 'token_num', 'id': 0}]
+                api_call = call_api('notifications.get',{'count': '0'})
+                if api_call: lastNviewcache = lastNviewcache + [api_call.get('last_viewed')]
+                else: lastNviewcache = lastNviewcache + [int(time.time())]
+                prob=prob+[1]
+        token_num = 0
+        prevuserid = idscache[token_num].get('id')
+        saveinstance()
+        print()
+        return 0
 def get_long_list(method, params, l_count, OFFSET_CONSTANT):
         l_offset = 0
         long_list = []
@@ -85,9 +101,8 @@ def read_mnemonics():
                         result[key] = int(value)
         return result
 def l(wrong):
-        wrong = wrong.lower().strip()
-        #re.match("^[' 'A-Za-z0-9_-]*$", wrong)
-        right = ''
+        wrong = wrong.lower().strip() 
+        right = ''  #re.match("^[' 'A-Za-z0-9_-]*$", wrong)
         for wrong_letter in wrong:
                 if ord(wrong_letter)<128: right_letter = wrong_letter
                 else: right_letter = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,.#_'['йцукенгшщзхъфывапролджэячсмитьбю№_'.find(wrong_letter)]
@@ -106,8 +121,7 @@ def read_ignore():
                         line = line.strip()
                         result.append(mn(line))
         return result
-def smiley_hex(c, sh):
-        return hex(c+sh).upper()[2:]+'.png'
+def smiley_hex(c, sh): return hex(c+sh).upper()[2:]+'.png'
 def charfilter(s):
         r=''
         for c in s:
@@ -119,8 +133,7 @@ def charfilter(s):
 def prints(s):
         global printm
         printm+=s
-def printsn(s): #print(s)
-        prints(s+'\n')
+def printsn(s): prints(s+'\n') #print(s)
 def print_attachments(attache):
         if attache is not None:
                 for attached in attache:
@@ -195,7 +208,8 @@ def getHistory(count, print_numbers, uid):
                         if print_numbers:
                                 printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
                 if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
-def iam(): print(idscash[token_num].get('first_name'), idscash[token_num].get('last_name')+' to '+str(prevuserid)+':')
+def iam():
+        if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+str(prevuserid)+':')
 def messaging():
         global token_num, printm, waitTime, prevuserid
         iam()
@@ -247,7 +261,8 @@ def messaging():
                                         continue
                                 elif r("n"):
                                         call_api('notifications.markAsViewed', {})
-                                        lastNviewcash[token_num] = int(time.time())
+                                        lastNviewcache[token_num] = int(time.time())
+                                        saveinstance()
                                         print()
                                         continue
                                 elif r("p"):
@@ -415,7 +430,7 @@ def messaging():
                                         audioget = s=='id' 
                                         if not s:
                                                 audioget = True
-                                                t = idscash[token_num].get('id')
+                                                t = idscache[token_num].get('id')
                                         elif audioget: t = mn(autitle)
                                         if audioget: big_audio_flag = False
                                         if audioget: audio_list = get_long_list('audio.get', {'owner_id': t}, au_count, AU_OFFSET_CONSTANT)
@@ -509,7 +524,8 @@ def messaging():
                                         userid = 0
                                         s = cin()
                                         if s is None: return(0)
-                                elif r("r"):
+                                elif r("r"): return(reset())
+                                elif r("."):
                                         api_call = call_api('messages.getDialogs', {'unread': '1'})
                                         if api_call: resmes = api_call.get('items')
                                         else: return(0)
@@ -552,7 +568,7 @@ def messaging():
                                         if huid is None: return(0)
                                         huid = mn(huid)
                                         getHistory(INFINITY, True, huid)
-                                        with open('history_' + str(idscash[token_num].get('id')) + '_to_' + huid + '.txt', 'w', encoding='utf-8') as f: f.write(printm)
+                                        with open('history_' + str(idscache[token_num].get('id')) + '_to_' + huid + '.txt', 'w', encoding='utf-8') as f: f.write(printm)
                                         printm=''
                                         print()
                                         continue
@@ -587,10 +603,13 @@ def messaging():
                                         r.encoding = 'UTF-8'
                                         x = r.text
                                         p = x.find('Поздравляем') #region = re.findall(r'Регион.*?\<\/li\>', x)
-                                        inf = x[p:p+163] #if region is not None: print(region[0][:-12].replace('</div><span class="data__item-content">',' '))
-                                        print(inf.replace('strong','').replace('/', '').replace('<>', ''))
+                                        inf = x[p:p+200] #if region is not None: print(region[0][:-12].replace('</div><span class="data__item-content">',' '))
+                                        inf = inf.replace('strong','').replace('/', '').replace('<>', '')
+                                        print(inf[:inf.find('Браузер')])
                                         continue
-                                elif r("q"): return(-3)
+                                elif r("q"):
+                                        saveinstance()
+                                        return(-3)
                 sharp = s.find('#')
                 Nsign = s.find('№')
                 if (Nsign>=0)and((Nsign<sharp)or(sharp<0)): sharp = Nsign
@@ -647,7 +666,7 @@ def messaging():
                                         print("resend it to youself, yeah? hah")
                                         confirmation = cin()
                                         if confirmation is None: return(0)
-                                        userid = idscash[token_num].get('id')
+                                        userid = idscache[token_num].get('id')
                         call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                         getHistory(10, False, userid)
                         print(printm)
@@ -661,8 +680,8 @@ def check_inbox():
         prev_token_num = token_num
         for token_num in range(len(token_list)):
                 if random.random() > prob[token_num]: continue
-                myname = idscash[token_num]
-                viewed_time = lastNviewcash[token_num]
+                myname = idscache[token_num]
+                viewed_time = lastNviewcache[token_num]
                 notif_resp = call_api('notifications.get',{'start_time': viewed_time})
                 resp = call_api('messages.getDialogs', {'unread': '1'})
                 if notif_resp: r = notif_resp.get('count')
@@ -737,6 +756,7 @@ def main():
         global printm, mnemonics, ignore, waitTime, looping
         mnemonics = read_mnemonics()
         ignore = read_ignore()
+        getcache()
         while True:
                 mes=messaging()
                 if mes==-2:
