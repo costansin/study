@@ -24,7 +24,7 @@ def call_api(method, params):
                         params[v[0]]=v[1]
         else:
                 params["access_token"] = token_list[token_num]
-                params["v"] = "5.35"
+                params["v"] = "5.40"
                 url = "https://api.vk.com/method/" + method
                 files = None
         E = False
@@ -156,6 +156,9 @@ def print_attachments(attache):
                                                 printsn(link)
                                                 break
                         elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
+                        elif atype=='link':
+                                printsn('['+stuff.get('title')+']\n['+stuff.get('description')+']\n'+stuff.get('url'))
+                                return
                         else:
                                 url = stuff.get('url')
                                 if url is None: url = stuff.get('view_url')
