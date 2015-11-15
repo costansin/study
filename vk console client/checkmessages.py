@@ -155,10 +155,7 @@ def print_attachments(attache):
                                         if link is not None:
                                                 printsn(link)
                                                 break
-                        elif atype=='video':
-                                req = str(cropadress)+'_'+str(stuff.get('access_key'))
-                                api_call = call_api('video.get', {'videos': req})
-                                if api_call: printsn(api_call.get('items')[0].get('player'))
+                        elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
                         else:
                                 url = stuff.get('url')
                                 if url is None: url = stuff.get('view_url')
@@ -374,23 +371,33 @@ def messaging():
                                         v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long', 'adult': '1'})
                                         if v is None: return(0)
                                         for vid in v.get('items'):
-                                                print(vid.get('title'))
-                                                print(vid.get('player'))
+                                                print(vid.get('title')) #print(vid.get('player'))
+                                                print('video'+str(vid.get('owner_id'))+'_'+str(vid.get('id')))
                                         continue
                                 elif r("x"):
-                                        s = cin() #get the video from a "player"-link
+                                        s = cin() #get the video from a "player"-link or "player"-link from video id
                                         if s is None: return(0)
-                                        x = requests.get(s).text
-                                        if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
-                                                print('Adult content error')
-                                                continue
-                                        xd = x.find('video_max_hd = ')
-                                        try: video_max_hd = int(x[xd+16:xd+17])
-                                        except: video_max_hd = 0
-                                        hds = ['240', '360', '480', '720', '1080']
-                                        video_url = x[x.find('url'+hds[video_max_hd])+7:]
-                                        video_url = video_url[:video_url.find('&amp;')]
-                                        print(video_url)
+                                        if s.find('video_ext')>=0:
+                                                x = requests.get(s).text
+                                                if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
+                                                        print('Adult content error')
+                                                        continue
+                                                xd = x.find('video_max_hd = ')
+                                                try: video_max_hd = int(x[xd+16:xd+17])
+                                                except: video_max_hd = 0
+                                                hds = ['240', '360', '480', '720', '1080']
+                                                video_url = x[x.find('url'+hds[video_max_hd])+7:]
+                                                video_url = video_url[:video_url.find('&amp;')]
+                                                print(video_url)
+                                        else:
+                                                s = s[s.find('video')+5:]
+                                                api_call = call_api('video.get', {'videos': s})
+                                                if api_call:
+                                                        vid = api_call.get('items')
+                                                        if vid:
+                                                                v = vid[0]
+                                                                if v.get('is_private'): print('ADULT_CONTENT')
+                                                                print(v.get('player'))
                                         continue
                                 elif r("a"):
                                         if attachments is not None:
