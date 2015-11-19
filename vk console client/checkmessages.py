@@ -1,12 +1,14 @@
 # -*- coding: utf-8
 import requests, time, datetime, ast, os, re, random
 from tkinter import *
-#https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token
 sleepTime, waitTime = 0.34, 53
-INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscache, lastNviewcache, prob, token_num = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], [], [], 0
+INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscache, lastNviewcache, prob, token_num, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], [], [], 0, 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
+for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile:
+        if not os.path.exists(x):
+                with open(x, 'w') as f: pass
 with open(tokenfile, 'r') as token_file: token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
 with open(raspyafile, 'r') as raspya_file: raspyadress = [a for a in raspya_file.readlines() if a[0]!='#'] #start line with # to make it comment
-smileys = os.listdir('smileys')
+if os.path.isdir('smileys'): smileys = os.listdir('smileys')
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
 smiley = re.compile('|'.join([re.escape(sm) for sm in rev_simple_smileys])+r'|\d+') #warning: all numbers are smileys!
@@ -40,17 +42,13 @@ def call_api(method, params):
                                 msg = err.get('error_msg')
                                 print(msg)
                                 if msg.find('Validation')+1: print(err.get('redirect_uri'))
+                                if msg.find('authorization')+1: print(full_auth_line)
                                 return
                 except:
                         if not E:
                                 print('E', end='')
                                 E = True
                         time.sleep(sleepTime)
-def getcache():
-        global token_num, idscache, lastNviewcache, prob, prevuserid
-        with open(cachefile, 'r') as cache_file:
-                i, l, p, t, r = cache_file.readlines()
-                idscache, lastNviewcache, prob, token_num, prevuserid = ast.literal_eval(i), ast.literal_eval(l), ast.literal_eval(p), int(t), ast.literal_eval(r)
 def saveinstance():
         with open(cachefile, 'w') as cache_file:
                 cache_file.write(str(idscache)+'\n')
@@ -59,7 +57,17 @@ def saveinstance():
                 cache_file.write(str(token_num)+'\n')
                 cache_file.write(str(prevuserid)+'\n')
 def reset():
-        global token_num, idscache, lastNviewcache, prob, prevuserid
+        global token_num, idscache, lastNviewcache, prob, prevuserid, token_list
+        if not token_list:
+                print(full_auth_line+'\n\n\nauthorisation token needed\nplease insert that in your browser and do what it interdicts\ni strongly promiss not to steal your profile\nactually, i cannot :(\n')
+                s = cin()
+                if s is None:
+                        print("c'mon, i AM really a good guy")
+                        s = cin()
+                        if s is None:
+                                raise PermissionError ('Lack of trust error')
+                token_list = [s]
+                with open(tokenfile, 'w') as token_file: token_file.write(s+'\n')
         for token_num in range(len(token_list)):
                 api_call = call_api('users.get', {})
                 if api_call: idscache = idscache + [api_call[0]]
@@ -73,6 +81,13 @@ def reset():
         saveinstance()
         print()
         return 0
+def getcache():
+        global token_num, idscache, lastNviewcache, prob, prevuserid
+        with open(cachefile, 'r') as cache_file:
+                try:
+                        i, l, p, t, r = cache_file.readlines()
+                        idscache, lastNviewcache, prob, token_num, prevuserid = ast.literal_eval(i), ast.literal_eval(l), ast.literal_eval(p), int(t), ast.literal_eval(r)
+                except: reset()
 def get_long_list(method, params, l_count, OFFSET_CONSTANT):
         l_offset = 0
         long_list = []
@@ -95,7 +110,7 @@ def cin():
         except KeyboardInterrupt: exit
 def read_mnemonics():
         result = {}
-        with open(mnemofile) as f:
+        with open(mnemofile, 'r') as f:
                 for line in f:
                         key, value = line.split()
                         result[key] = int(value)
@@ -116,7 +131,7 @@ def mn(idstring):
                 except: return #api_call = call_api('users.get', {'user_ids': idstring}) #if api_call: return str(api_call[0].get('id')) #else: return '0'
 def read_ignore():
         result = []
-        with open(ignorefile) as f:
+        with open(ignorefile, 'r') as f:
                 for line in f:
                         line = line.strip()
                         result.append(mn(line))
@@ -217,14 +232,14 @@ def messaging():
         s = ''
         userid = None
         wall_flag = False
+        attachments = ''
+        forward_messages = ''
+        subject = None
         while (s=='')or(l(s[-1])!='#'):
                 s = cin()
                 if s is None: return(0)
                 if (m==''):
                         if (s==''): return(-2)
-                        attachments = None
-                        forward_messages = None
-                        subject = None
                         if (len(s)==1):
                                 if s.isdigit():
                                         token_num = int(s)
@@ -248,11 +263,10 @@ def messaging():
                                                 else: return(0)
                                                 if uploaded_photo: s = 'photo'+str(uploaded_photo[0].get('owner_id'))+'_'+str(uploaded_photo[0].get('id'))
                                                 print('\n'+s)
-                                        if s[0].isdigit(): forward_messages = s
+                                        if s[0].isdigit(): forward_messages += ','+s
                                         elif (s[0].lower()=='s')or(s[0].lower()=='ы'): subject = s[2:] #s_The subject of my message
-                                        else: attachments = s
-                                        s=cin() #no continue for message
-                                        if s is None: return(0)
+                                        else: attachments += ','+s
+                                        continue
                                 if r("~")or r("`"):
                                         s = cin()
                                         if s is None: return(0)
@@ -403,7 +417,7 @@ def messaging():
                                                                 print(v.get('player'))
                                         continue
                                 elif r("a"):
-                                        if attachments is not None:
+                                        if attachments:
                                                 add_owner_id, add_audio_id = attachments.split('_')
                                                 print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
                                                 continue
@@ -557,7 +571,11 @@ def messaging():
                                                 print('temporarily seen')
                                         else:
                                                 ignore.append(iuid)
-                                                with open(ignorefile, 'a') as f: f.write('\n'+s)
+                                                if os.path.exists(ignorefile):
+                                                        with open(ignorefile, 'a') as f: f.write('\n'+s)
+                                                else:
+                                                        print('ignore file was deleted!')
+                                                        with open(ignorefile, 'w') as f: f.write('\n'+s)
                                         continue
                                 elif r("m"):
                                         print(mnemonics)
@@ -571,7 +589,11 @@ def messaging():
                                         except: return(0)
                                         muserids = str(muserid)
                                         mnemonics[s] = muserid
-                                        with open(mnemofile, 'a') as f: f.write('\n'+s+' '+muserids)
+                                        if os.path.exists(mnemofile):
+                                                with open(mnemofile, 'a') as f: f.write('\n'+s+' '+muserids)
+                                        else:
+                                                print('mnemo file was deleted!')
+                                                with open(mnemofile, 'w') as f: f.write('\n'+s+' '+muserids)
                                         continue
                                 elif r("h"):
                                         huid = cin()
@@ -644,7 +666,7 @@ def messaging():
                  print(call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}))
                  return(0)
         if (m==''): return(0)
-        elif (m=='\n')and(attachments is None)and(forward_messages is None):
+        elif (m=='\n')and not attachments and not forward_messages:
                 call_api('messages.markAsRead', {'peer_id': userid})
                 printm='\n'
                 getHistory(10, False, userid)
@@ -769,32 +791,33 @@ def main():
         getcache()
         while True:
                 mes=messaging()
-                if mes==-2:
-                        printm='\n'
-                        check_inbox()
-                        print(printm)
-                elif mes==-1:
-                        printm=''
-                        looping = True
-                        while (check_inbox()==0):
-                                printm=''
-                                print('-', end='')
-                                try:
-                                        for timer in range(waitTime):
-                                                time.sleep(1)
-                                except KeyboardInterrupt:
-                                        print()
-                                        break
-                        else:
-                                print()
-                                master=Tk()
-                                master.wm_attributes("-topmost", 1)
-                                master.wm_state('normal')
-                                w = Canvas(master, width=width, height=height)
-                                w = Message(master, text=printm)
-                                w.pack()
-                                master.mainloop()
+                if mes<0:
+                        if mes==-2:
+                                printm='\n'
+                                check_inbox()
                                 print(printm)
-                        looping = False
-                elif mes==-3: return
+                        elif mes==-1:
+                                printm=''
+                                looping = True
+                                while (check_inbox()==0):
+                                        printm=''
+                                        print('-', end='')
+                                        try:
+                                                for timer in range(waitTime):
+                                                        time.sleep(1)
+                                        except KeyboardInterrupt:
+                                                print()
+                                                break
+                                else:
+                                        print()
+                                        master=Tk()
+                                        master.wm_attributes("-topmost", 1)
+                                        master.wm_state('normal')
+                                        w = Canvas(master, width=width, height=height)
+                                        w = Message(master, text=printm)
+                                        w.pack()
+                                        master.mainloop()
+                                        print(printm)
+                                looping = False
+                        elif mes==-3: return
 if __name__ == '__main__': main()
