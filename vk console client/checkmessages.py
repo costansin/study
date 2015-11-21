@@ -204,25 +204,25 @@ def getHistory(count, print_numbers, uid):
         unread = False
         history = get_long_list('messages.getHistory', {'user_id': uid}, count, HI_OFFSET_CONSTANT)
         inoutchar = ''
-        if history:
-                for message in reversed(history):
-                        if not unread and (message.get('read_state')==0):
-                                unread = True
-                                printsn('_._')
-                        if (message.get('out')==0):
-                                if (inoutchar!='>'):
-                                        inoutchar='>'
-                                        printsn(inoutchar)
-                        else:
-                                if (inoutchar!='<'):
-                                        inoutchar='<'
-                                        printsn(inoutchar)
-                        if print_numbers:
-                                printsn('['+str(message.get('id'))+']')
-                        print_message(message, 0)
-                        if print_numbers:
-                                printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
-                if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
+        if not history: return
+        for message in reversed(history):
+                if not unread and (message.get('read_state')==0):
+                        unread = True
+                        printsn('_._')
+                if (message.get('out')==0):
+                        if (inoutchar!='>'):
+                                inoutchar='>'
+                                printsn(inoutchar)
+                else:
+                        if (inoutchar!='<'):
+                                inoutchar='<'
+                                printsn(inoutchar)
+                if print_numbers:
+                        printsn('['+str(message.get('id'))+']')
+                print_message(message, 0)
+                if print_numbers:
+                        printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
+        if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
 def iam():
         if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+str(prevuserid)+':')
 def messaging():
@@ -394,7 +394,15 @@ def messaging():
                                 elif r("x"):
                                         s = cin() #get the video from a "player"-link or "player"-link from video id
                                         if s is None: return(0)
-                                        if s.find('video_ext')>=0:
+                                        if not s.find('audio'):
+                                                owner, aid = s[5:].split('_')
+                                                api_call = call_api('audio.get', {'owner_id': owner, 'audio_ids': aid})
+                                                if not api_call: return(0)
+                                                auresplist = api_call.get('items')
+                                                if not auresplist: return(0)
+                                                aur = auresplist[0]
+                                                for x in aur: print(x, aur[x], sep='\t\t')
+                                        elif s.find('video_ext')+1:
                                                 x = requests.get(s).text
                                                 if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
                                                         print('Adult content error')
