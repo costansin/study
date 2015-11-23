@@ -427,7 +427,7 @@ def messaging():
                                 elif r("a"):
                                         if attachments:
                                                 add_owner_id, add_audio_id = attachments.split('_')
-                                                print(call_api('audio.add', {'owner_id': int(add_owner_id[5:]), 'audio_id': int(add_audio_id)}))
+                                                print(call_api('audio.add', {'owner_id': int(add_owner_id[6:]), 'audio_id': int(add_audio_id)}))
                                                 continue
                                         big_audio_flag = s.isupper()
                                         print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget][start num]\n[Number]\n[Search string]')
@@ -717,6 +717,10 @@ def messaging():
                                         if not s: return(0)
                                         if s.isdigit(): token_num = int(s)
                                         else: return(0)
+                        while len(m)>4096:
+                                lastn = m[:4096].rfind('\n')
+                                call_api('messages.send', {meth: userid, 'message': m[:lastn], 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
+                                m = m[lastn:]
                         call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                         print(printm+m)
                         printm = ''
