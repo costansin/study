@@ -719,6 +719,7 @@ def messaging():
                                         else: return(0)
                         while len(m)>4096:
                                 lastn = m[:4096].rfind('\n')
+                                if lastn==-1: lastn=4095
                                 call_api('messages.send', {meth: userid, 'message': m[:lastn], 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                                 m = m[lastn:]
                         call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
