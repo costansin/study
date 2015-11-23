@@ -20,7 +20,7 @@ def call_api(method, params):
                 q = method.find('?')
                 url = method[:q]
                 files = {'photo': ('file.png', open(params, 'rb'))}
-                params = {}
+                params = {} #dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(method[q+1:]).query))
                 for query in method[q+1:].split('&'):
                         v = query.split('=')
                         params[v[0]]=v[1]
@@ -707,9 +707,18 @@ def messaging():
                                         confirmation = cin()
                                         if confirmation is None: return(0)
                                         userid = idscache[token_num].get('id')
-                        call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                         getHistory(10, False, userid)
-                        print(printm)
+                        if not printm:
+                                print('The history is empty!\nall is well?')
+                                confirmation = cin()
+                                if confirmation is None or l(confirmation)!="all is well":
+                                        print('Input another token_num')
+                                        s = cin()
+                                        if not s: return(0)
+                                        if s.isdigit(): token_num = int(s)
+                                        else: return(0)
+                        call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
+                        print(printm+m)
                         printm = ''
                         if out_flag: return(-1)
         return(0)
