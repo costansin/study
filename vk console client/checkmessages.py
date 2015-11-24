@@ -2,7 +2,7 @@
 import requests, time, datetime, ast, os, re, random
 from tkinter import *
 sleepTime, waitTime = 0.34, 53
-INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscache, lastNviewcache, prob, token_num, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], [], [], 0, 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
+INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscache, uidscache, lastNviewcache, prob, token_num, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], {}, [], [], 0, 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
 for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile:
         if not os.path.exists(x):
                 with open(x, 'w') as f: pass
@@ -56,8 +56,10 @@ def saveinstance():
                 cache_file.write(str(prob)+'\n')
                 cache_file.write(str(token_num)+'\n')
                 cache_file.write(str(prevuserid)+'\n')
+                cache_file.write(str(uidscache)+'\n')
 def reset():
-        global token_num, idscache, lastNviewcache, prob, prevuserid, token_list
+        global token_num, idscache, uidscache, lastNviewcache, prob, prevuserid, token_list
+        idscache, uidscache, lastNviewcache, prob = [], {}, [], []
         if not token_list:
                 print(full_auth_line+'\n\n\nauthorisation token needed\nplease insert that in your browser and do what it interdicts\ni strongly promiss not to steal your profile\nactually, i cannot :(\n')
                 s = cin()
@@ -70,24 +72,36 @@ def reset():
                 with open(tokenfile, 'w') as token_file: token_file.write(s+'\n')
         for token_num in range(len(token_list)):
                 api_call = call_api('users.get', {})
-                if api_call: idscache = idscache + [api_call[0]]
+                if api_call:
+                        me = api_call[0]
+                        idscache = idscache + [me]
+                        uidscache[me.get('id')] = me
                 else: idscache = idscache + [{'last_name': str(token_num), 'first_name': 'token_num', 'id': 0}]
                 api_call = call_api('notifications.get',{'count': '0'})
                 if api_call: lastNviewcache = lastNviewcache + [api_call.get('last_viewed')]
                 else: lastNviewcache = lastNviewcache + [int(time.time())]
-                prob=prob+[1]
+                prob=prob+[1, 1]
         token_num = 0
         prevuserid = idscache[token_num].get('id')
         saveinstance()
         print()
         return 0
 def getcache():
-        global token_num, idscache, lastNviewcache, prob, prevuserid
+        global token_num, idscache, lastNviewcache, prob, prevuserid, uidscache
         with open(cachefile, 'r') as cache_file:
                 try:
-                        i, l, p, t, r = cache_file.readlines()
-                        idscache, lastNviewcache, prob, token_num, prevuserid = ast.literal_eval(i), ast.literal_eval(l), ast.literal_eval(p), int(t), ast.literal_eval(r)
+                        i, l, p, t, r, u = cache_file.readlines()
+                        idscache, lastNviewcache, prob, token_num, prevuserid, uidscache = ast.literal_eval(i), ast.literal_eval(l), ast.literal_eval(p), int(t), ast.literal_eval(r), ast.literal_eval(u)
                 except: reset()
+def getcached(uid):
+        global uidscache
+        result = uidscache.get(uid)
+        if result is None:
+                api_call = call_api('users.get', {'user_ids': uid})
+                if api_call: result = api_call[0]
+                if result: uidscache[uid] = result
+                saveinstance()
+        return result
 def get_long_list(method, params, l_count, OFFSET_CONSTANT):
         l_offset = 0
         long_list = []
@@ -145,10 +159,9 @@ def charfilter(s):
                 elif ch in simple_smileys: r+=simple_smileys[ch]+' '
                 else: r+='&#'+str(ch)+';'
         return r
-def prints(s):
+def printsn(s):
         global printm
-        printm+=s
-def printsn(s): prints(s+'\n') #print(s)
+        printm += s + '\n' #print(s)
 def print_attachments(attache):
         if attache is not None:
                 for attached in attache:
@@ -184,21 +197,15 @@ def print_attachments(attache):
                                                 printsn(url[:urlf]+' ')
                                         else: printsn(url+' ')
                         printsn(adress+' ')
-def print_message(message, k):
-        body = message.get('body')
-        if body!='':
-                if message.get('emoji'): printsn(charfilter(body))
-                else: printsn(body)
+def print_message(prefix, message, k):
+        body = prefix + message.get('body')
+        if body: printsn(charfilter(body)) if message.get('emoji') else printsn(body)
         print_attachments(message.get('attachments'))
         fwd = message.get('fwd_messages')
-        tab = ''
-        for i in range(0,k): tab = tab + '     '
         if fwd is not None:
-                printsn(tab+'[fwd_messages:]')
-                for fwdm in fwd:
-                        for i in range(0,k+1): prints('     ')
-                        prints('['+str(fwdm.get('user_id'))+']')
-                        print_message(fwdm, k+1)                     
+                printsn('     '*k + '[fwd_messages:]')
+                for fwdm in fwd: print_message('     '*(k+1) + '['+str(fwdm.get('user_id'))+']', fwdm, k+1)
+def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('%d %b %Y (%a) %H:%M:%S')+']')
 def getHistory(count, print_numbers, uid):
         if not isinstance(uid, int): uid = mn(uid)
         unread = False
@@ -219,12 +226,19 @@ def getHistory(count, print_numbers, uid):
                                 printsn(inoutchar)
                 if print_numbers:
                         printsn('['+str(message.get('id'))+']')
-                print_message(message, 0)
-                if print_numbers:
-                        printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
-        if not print_numbers: printsn('['+str(datetime.datetime.fromtimestamp(message.get('date')))+']')
+                print_message('', message, 0)
+                if print_numbers: printsn(printtime(message.get('date')))
+        if not print_numbers: printsn(printtime(message.get('date')))
 def iam():
         if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+str(prevuserid)+':')
+def showprintm():
+        master=Tk()
+        master.wm_attributes("-topmost", 1)
+        master.wm_state('normal')
+        w = Canvas(master, width=width, height=height)
+        w = Message(master, text=printm)
+        w.pack()
+        master.mainloop()
 def messaging():
         global token_num, printm, waitTime, prevuserid
         iam()
@@ -246,8 +260,10 @@ def messaging():
                                         iam()
                                         continue												
                                 def r(c): return l(s)==c
-                                if r("'"):
-                                        return(-1)
+                                if r("?"):
+                                        print("' - wait regime\n+ - attach\n~ or ' - waittime for wait regime\nn - mark notifications as read\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image\nt - input raw api call\nl - like something\nv - find an hd-video\na - find an audio; A - find an audio of exact author, title or id\nx - raw link to audio/video\nu - user info\nf - friend someone/join a group/see friends of\nb - post to the wall - warning: makes you online!\nr - reset\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\nd - delete messages by ids\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\nq - quit\ng - user IP and location\n? - this help info")
+                                        continue
+                                if r("'"): return(-1)
                                 if r("+"):
                                         #print('[forward messages ids (e.g. 1232,1233,1237) | attachments (e.g. photo123123_123223,audio-34232_23123)]')
                                         s = cin()
@@ -264,7 +280,7 @@ def messaging():
                                                 if uploaded_photo: s = 'photo'+str(uploaded_photo[0].get('owner_id'))+'_'+str(uploaded_photo[0].get('id'))
                                                 print('\n'+s)
                                         if s[0].isdigit(): forward_messages += ','+s
-                                        elif (s[0].lower()=='s')or(s[0].lower()=='ы'): subject = s[2:] #s_The subject of my message
+                                        elif l(s[0])=='s': subject = s[2:] #s_The subject of my message
                                         else: attachments += ','+s
                                         continue
                                 if r("~")or r("`"):
@@ -282,7 +298,7 @@ def messaging():
                                 elif r("p"):
                                         print('Set probabilities of token_nums while checkbox')
                                         global prob
-                                        prob = [float(input()) for i in range(len(token_list))]
+                                        prob = [float(input()) for i in range(2*len(token_list))]
                                         continue
                                 elif r("e"): #rasp.yandex.ru/search/suburban/? #https://rasp.yandex.ru/informers/search/?fromId=s0000000&amp;toId=s0000000&amp;
                                         for rasp in raspyadress:
@@ -436,11 +452,11 @@ def messaging():
                                         wget_start_num = None
                                         s = cin()
                                         if s is None: return(0)
-                                        if (s.lower()=='here')or(s.lower()=='руку'):
+                                        if l(s)=='here':
                                                 m3u_flag = False
                                                 s = cin()
                                                 if s is None: return(0)
-                                        if (s[:4].lower()=='wget')or(s[:4].lower()=='цпуе'):
+                                        if l(s[:4])=='wget':
                                                 wget_flag = True
                                                 try: wget_start_num = int(s[4:])
                                                 except: wget_start_num = None
@@ -487,7 +503,7 @@ def messaging():
                                                                 if wget_start_num is not None:
                                                                         wget_start_num += 1
                                                                         aunum = str(wget_start_num)+'_'
-                                                                if url!='': wget_file.write('wget '+url[:url.find('?extra')]+' -O "' + s+'\\'+aunum+aufname + '.mp3"\n')
+                                                                if url!='': wget_file.write('wget -nc '+url[:url.find('?extra')]+' -O "' + s+'\\'+aunum+aufname + '.mp3"\n')
                                                         wget_file.write('Del %0 /q\n')
                                                 os.system(wget_filename)
                                         if m3u_flag:
@@ -521,10 +537,11 @@ def messaging():
                                                         actif = call_api('messages.getLastActivity', {'user_id': info[0].get('id')})
                                                         if actif:
                                                                 onstatus = 'online' if actif.get('online') else 'offline'
-                                                                print(onstatus, datetime.datetime.fromtimestamp(actif.get('time')))
+                                                                print(onstatus, printtime(actif.get('time')))
                                         else:
                                                 info = call_api('utils.resolveScreenName', {'screen_name': suserid})
                                                 if info: print(info.get('type'), info.get('object_id'))
+                                        print('Now ' + printtime(time.time()))
                                         continue
                                 elif r("f"):
                                         print("'' | > | < | F | number")
@@ -569,6 +586,7 @@ def messaging():
                                         continue
                                 elif r("i"):
                                         print(ignore)
+                                        print("Now add something to ignore list or temporarily remove something from it (to cancel - CTRL+C).")
                                         s = cin()
                                         if s is None: return(0)
                                         s = l(s.strip())
@@ -587,6 +605,7 @@ def messaging():
                                         continue
                                 elif r("m"):
                                         print(mnemonics)
+                                        print("Now add something to mnemo list (to cancel - CTRL+C).")
                                         s = cin()
                                         if s is None: return(0)
                                         s = s.strip()
@@ -604,6 +623,7 @@ def messaging():
                                                 with open(mnemofile, 'w') as f: f.write('\n'+s+' '+muserids)
                                         continue
                                 elif r("h"):
+                                        print("saving history to file. if you need HELP - type '?'")
                                         huid = cin()
                                         if huid is None: return(0)
                                         huid = mn(huid)
@@ -723,57 +743,55 @@ def messaging():
                                 call_api('messages.send', {meth: userid, 'message': m[:lastn], 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                                 m = m[lastn:]
                         call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
-                        print(printm+m)
+                        print(printm+m+'\n'+printtime(time.time()))
                         printm = ''
                         if out_flag: return(-1)
         return(0)
 def check_inbox():
         A=0
-        global token_num
+        global token_num, printm
         index = 0
         prev_token_num = token_num
-        for token_num in range(len(token_list)):
-                if random.random() > prob[token_num]: continue
+        for token_num in range(len(token_list)): #if random.random() > prob[token_num]: continue
                 myname = idscache[token_num]
                 viewed_time = lastNviewcache[token_num]
-                notif_resp = call_api('notifications.get',{'start_time': viewed_time})
-                resp = call_api('messages.getDialogs', {'unread': '1'})
-                if notif_resp: r = notif_resp.get('count')
+                notif_resp, resp = None, None
+                if random.random() < prob[token_num*2]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                if random.random() < prob[token_num*2-1]: resp = call_api('messages.getDialogs', {'unread': '1'})
+                if notif_resp:
+                        r = notif_resp.get('count')
+                        nitems = reversed(notif_resp.get('items'))
                 else:
-                        print(printm)
-                        return(0)
-                if resp: t = resp.get('count')
+                        r = 0
+                        nitems = []
+                if resp:
+                        t = resp.get('count')
+                        items = resp.get('items')
                 else:
-                        print(printm)
-                        return(0)
+                        t = 0
+                        items = []
                 A+=r+t
                 printsn(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
-                items = resp.get('items')
-                if items:
-                        for x in resp.get('items'):
-                                N = x.get('unread')
-                                mes = x.get('message')
-                                chat_id = mes.get('chat_id')
-                                if chat_id is None: #check dialogue is not a chat
-                                        uid = mes.get('user_id')
-                                        if uid in ignore:
-                                                A-=1
-                                                t-=1
-                                                continue
-                                        respname = call_api('users.get', {'user_ids': uid})
-                                        if respname: printsn(respname[0].get('first_name')+' '+respname[0].get('last_name')+' '+str(uid)+' '+str(N)+' messages')
-                                        getHistory(N, False, uid)
-                                else:
-                                        uid = 2000000000 + chat_id
-                                        if uid in ignore:
-                                                A-=1
-                                                t-=1
-                                                call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}) #autoread
-                                        else:
-                                                printsn(str(uid)+' chat '+str(N))
-                                                getHistory(N, False, uid)
-                if (t>0): printsn("-------")
-                for x in reversed(notif_resp.get('items')):
+                for x in items:
+                        N = x.get('unread')
+                        mes = x.get('message')
+                        chat_id = mes.get('chat_id')
+                        chat = chat_id is not None
+                        if chat: uid = 2000000000 + chat_id #check dialogue is not a chat
+                        else: uid = mes.get('user_id')
+                        if uid in ignore:
+                                A-=1
+                                t-=1
+                                if chat: call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}) #autoread
+                                continue
+                        respname = getcached(uid)
+                        if respname: printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                        getHistory(N, False, uid)
+                        if not looping:
+                                print(printm)
+                                printm=''
+                if r and t: printsn("-------")
+                for x in nitems:
                         parent = x.get('parent')
                         xtype = x.get('type')
                         if parent is not None:
@@ -795,15 +813,15 @@ def check_inbox():
                         if whos is not None:
                                 for who in whos:
                                         whuid = who.get('from_id')
-                                        whuidinfo = call_api('users.get', {'user_ids': whuid})
-                                        if whuidinfo: printsn(whuidinfo[0].get('first_name')+' '+whuidinfo[0].get('last_name')+' '+str(whuid))
+                                        whuidinfo = getcached(whuid)
+                                        if whuidinfo: printsn(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
                         comment = feedback.get('text')
                         if comment is None:
                                 printsn(xtype)
                         else:
                                 printsn(charfilter(comment))
                                 print_attachments(feedback.get('attachments'))
-                printsn("_____________")
+                #printsn("_____________")
         token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
@@ -816,8 +834,7 @@ def main():
                 if mes<0:
                         if mes==-2:
                                 printm='\n'
-                                check_inbox()
-                                print(printm)
+                                if check_inbox()>0: print(printm)
                         elif mes==-1:
                                 printm=''
                                 looping = True
@@ -830,16 +847,7 @@ def main():
                                         except KeyboardInterrupt:
                                                 print()
                                                 break
-                                else:
-                                        print()
-                                        master=Tk()
-                                        master.wm_attributes("-topmost", 1)
-                                        master.wm_state('normal')
-                                        w = Canvas(master, width=width, height=height)
-                                        w = Message(master, text=printm)
-                                        w.pack()
-                                        master.mainloop()
-                                        print(printm)
+                                else: showprintm() #print(printm)
                                 looping = False
                         elif mes==-3: return
 if __name__ == '__main__': main()
