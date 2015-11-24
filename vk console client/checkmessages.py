@@ -756,8 +756,8 @@ def check_inbox():
                 myname = idscache[token_num]
                 viewed_time = lastNviewcache[token_num]
                 notif_resp, resp = None, None
-                if random.random() < prob[token_num*2]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
-                if random.random() < prob[token_num*2-1]: resp = call_api('messages.getDialogs', {'unread': '1'})
+                if not looping or random.random() < prob[token_num*2]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                if not looping or random.random() < prob[token_num*2-1]: resp = call_api('messages.getDialogs', {'unread': '1'})
                 if notif_resp:
                         r = notif_resp.get('count')
                         nitems = reversed(notif_resp.get('items'))
