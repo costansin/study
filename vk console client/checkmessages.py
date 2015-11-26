@@ -756,8 +756,8 @@ def check_inbox():
                 myname = idscache[token_num]
                 viewed_time = lastNviewcache[token_num]
                 notif_resp, resp = None, None
-                if not looping or random.random() < prob[token_num*2]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
-                if not looping or random.random() < prob[token_num*2-1]: resp = call_api('messages.getDialogs', {'unread': '1'})
+                if not looping or random.random() < prob[token_num*2-1]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                if not looping or random.random() < prob[token_num*2]: resp = call_api('messages.getDialogs', {'unread': '1'})
                 if notif_resp:
                         r = notif_resp.get('count')
                         nitems = reversed(notif_resp.get('items'))
@@ -790,7 +790,7 @@ def check_inbox():
                         if not looping:
                                 print(printm)
                                 printm=''
-                if r and t: printsn("-------")
+                #if r and t: printsn("-------")
                 for x in nitems:
                         parent = x.get('parent')
                         xtype = x.get('type')
@@ -821,7 +821,7 @@ def check_inbox():
                         else:
                                 printsn(charfilter(comment))
                                 print_attachments(feedback.get('attachments'))
-                #printsn("_____________")
+                printsn("_____________")
         token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
@@ -834,7 +834,7 @@ def main():
                 if mes<0:
                         if mes==-2:
                                 printm='\n'
-                                if check_inbox()>0: print(printm)
+                                print(printm) if check_inbox()>0 else print()
                         elif mes==-1:
                                 printm=''
                                 looping = True
@@ -847,7 +847,9 @@ def main():
                                         except KeyboardInterrupt:
                                                 print()
                                                 break
-                                else: showprintm() #print(printm)
+                                else:
+                                        showprintm()
+                                        print(printm)
                                 looping = False
                         elif mes==-3: return
 if __name__ == '__main__': main()
