@@ -3,15 +3,17 @@ import requests, time, datetime, ast, os, re, random
 from tkinter import *
 sleepTime, waitTime = 0.34, 53
 INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscache, uidscache, lastNviewcache, prob, token_num, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], {}, [], [], 0, 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
-for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile:
-        if not os.path.exists(x):
-                with open(x, 'w') as f: pass
-with open(tokenfile, 'r') as token_file: token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
-with open(raspyafile, 'r') as raspya_file: raspyadress = [a for a in raspya_file.readlines() if a[0]!='#'] #start line with # to make it comment
-if os.path.isdir('smileys'): smileys = os.listdir('smileys')
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
 smiley = re.compile('|'.join([re.escape(sm) for sm in rev_simple_smileys])+r'|\d+') #warning: all numbers are smileys!
+def start():        
+        for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile:
+                if not os.path.exists(x):
+                        with open(x, 'w') as f: pass
+        global token_list, raspyadress, smileys
+        with open(tokenfile, 'r') as token_file: token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
+        with open(raspyafile, 'r') as raspya_file: raspyadress = [a for a in raspya_file.readlines() if a[0]!='#'] #start line with # to make it comment
+        if os.path.isdir('smileys'): smileys = os.listdir('smileys')
 def call_api(method, params):
         #print(method, params)
         #time.sleep(sleepTime)
@@ -267,12 +269,13 @@ def messaging():
                         if (s==''): return(-2)
                         if (len(s)==1):
                                 if s.isdigit():
-                                        token_num = int(s)
+                                        n = int(s)
+                                        if n<=len(token_list): token_num = n
                                         iam()
                                         continue												
                                 def r(c): return l(s)==c
                                 if r("?"):
-                                        print("' - wait regime\n+ - attach (? for more info)\n~ or ' - waittime for wait regime\nn - mark notifications as read\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio (? for help); A - find an audio of exact author (? for help), title or id\nx - raw link to audio/video (x of video2982_242 is player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages by ids\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\ng - user IP and location\n? - this help info\nq - quit")
+                                        print("' - wait regime\n+ - attach (? for more info)\n~ or ' - waittime for wait regime\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio (? for help); A - find an audio of exact author (? for help), title or id\nx - raw link to audio/video (x of video2982_242 is player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages by ids\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\ng - user IP and location\n? - this help info\nq - quit")
                                         continue
                                 if r("'"): return(-1)
                                 if r("+"):
@@ -433,10 +436,18 @@ def messaging():
                                 elif r("o"):
                                         s = cin()
                                         if s is None: return(0)
-                                        ofname = 'file'+s[s.rfind('.'):]
-                                        with open(ofname, 'wb') as f:
-                                                f.write(requests.get(s).content)
-                                        os.system(ofname)
+                                        if r("?"): print('opens a file from a direct link. Or opens tokenfile, mnemofile, ignorefile, raspyafile - using T,M,I,R commands')
+                                        elif r("t"): os.system(tokenfile)
+                                        elif r("m"): os.system(mnemofile)
+                                        elif r("i"): os.system(ignorefile)
+                                        elif r("r"): os.system(raspyafile)
+                                        else:
+                                                ofname = 'file'+s[s.rfind('.'):]
+                                                with open(ofname, 'wb') as f:
+                                                        f.write(requests.get(s).content)
+                                                os.system(ofname)
+                                                continue
+                                        start()
                                         continue
                                 elif r("v"):
                                         s = cin()
@@ -864,6 +875,7 @@ def check_inbox():
         return(A) #messages+notifies of all tokens
 def main():
         global printm, mnemonics, ignore, waitTime, looping
+        start()
         mnemonics = read_mnemonics()
         ignore = read_ignore()
         getcache()
