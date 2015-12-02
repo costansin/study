@@ -163,8 +163,9 @@ def charfilter(s):
         return r
 def printms():
         global printm
+        #print('{'+printm+'}')
         print(printm)
-        printm = '\n'
+        printm = ''
 def printsn(s):
         global printm
         printm += s + '\n' #print(s)
@@ -173,7 +174,7 @@ def name_from_id(uid):
         cachedid = getcached(uid)
         return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')'
 def iam():
-        if idscache: print('\n'+idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+name_from_id(prevuserid)+':')
+        if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+name_from_id(prevuserid)+':')
 def print_attachments(attache):
         if attache is not None:
                 for attached in attache:
@@ -809,7 +810,7 @@ def check_inbox():
                         t = 0
                         items = []
                 A+=r+t
-                printsn(myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
+                printsn('\n'+myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
                 for x in items:
                         N = x.get('unread')
                         mes = x.get('message')
@@ -826,7 +827,7 @@ def check_inbox():
                         if respname: printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                         getHistory(N, False, uid)
                         if not looping: printms()
-                #if r and t: printsn("-------")
+                if r and t: printsn("-------")
                 for x in nitems:
                         parent = x.get('parent')
                         xtype = x.get('type')
@@ -857,7 +858,8 @@ def check_inbox():
                         else:
                                 printsn(charfilter(comment))
                                 print_attachments(feedback.get('attachments'))
-                printsn("_____________")
+                        if not looping: printms()
+                #printsn("_____________")
         token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
@@ -869,13 +871,13 @@ def main():
                 mes=messaging()
                 if mes<0:
                         if mes==-2:
-                                if check_inbox()>0: printms()
-                                else: printm='\n'
+                                if check_inbox()>0: pass#printms()
+                                else:
+                                        print()
+                                        printm=''
                         elif mes==-1:
-                                printm=''
                                 looping = True
                                 while (check_inbox()==0):
-                                        printm=''
                                         print('-', end='')
                                         try:
                                                 for timer in range(waitTime):
@@ -885,6 +887,7 @@ def main():
                                                 break
                                 else:
                                         showprintm()
+                                        print()
                                         printms()
                                 looping = False
                         elif mes==-3: return
