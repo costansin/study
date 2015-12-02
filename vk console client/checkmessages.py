@@ -50,7 +50,7 @@ def call_api(method, params):
                                 E = True
                         time.sleep(sleepTime)
 def saveinstance():
-        with open(cachefile, 'w') as cache_file:
+        with open(cachefile, 'w', encoding='utf-8') as cache_file:
                 cache_file.write(str(idscache)+'\n')
                 cache_file.write(str(lastNviewcache)+'\n')
                 cache_file.write(str(prob)+'\n')
@@ -68,6 +68,8 @@ def reset():
                         s = cin()
                         if s is None:
                                 raise PermissionError ('Lack of trust error')
+                refull = re.findall('access_token=.*?&', s)
+                if refull: s = refull[0][13:-1]
                 token_list = [s]
                 with open(tokenfile, 'w') as token_file: token_file.write(s+'\n')
         for token_num in range(len(token_list)):
@@ -88,7 +90,7 @@ def reset():
         return 0
 def getcache():
         global token_num, idscache, lastNviewcache, prob, prevuserid, uidscache
-        with open(cachefile, 'r') as cache_file:
+        with open(cachefile, 'r', encoding='utf-8') as cache_file:
                 try:
                         i, l, p, t, r, u = cache_file.readlines()
                         idscache, lastNviewcache, prob, token_num, prevuserid, uidscache = ast.literal_eval(i), ast.literal_eval(l), ast.literal_eval(p), int(t), ast.literal_eval(r), ast.literal_eval(u)
@@ -159,9 +161,19 @@ def charfilter(s):
                 elif ch in simple_smileys: r+=simple_smileys[ch]+' '
                 else: r+='&#'+str(ch)+';'
         return r
+def printms():
+        global printm
+        print(printm)
+        printm = '\n'
 def printsn(s):
         global printm
         printm += s + '\n' #print(s)
+def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('%d %b %Y (%a) %H:%M:%S')+']')
+def name_from_id(uid):
+        cachedid = getcached(uid)
+        return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')'
+def iam():
+        if idscache: print('\n'+idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+name_from_id(prevuserid)+':')
 def print_attachments(attache):
         if attache is not None:
                 for attached in attache:
@@ -183,7 +195,7 @@ def print_attachments(attache):
                                         if link is not None:
                                                 printsn(link)
                                                 break
-                        elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
+                        #elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
                         elif atype=='link':
                                 printsn('['+stuff.get('title')+']\n['+stuff.get('description')+']\n'+stuff.get('url'))
                                 return
@@ -204,10 +216,10 @@ def print_message(prefix, message, k):
         fwd = message.get('fwd_messages')
         if fwd is not None:
                 printsn('     '*k + '[fwd_messages:]')
-                for fwdm in fwd: print_message('     '*(k+1) + '['+str(fwdm.get('user_id'))+']', fwdm, k+1)
-def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('%d %b %Y (%a) %H:%M:%S')+']')
+                for fwdm in fwd: print_message('     '*(k+1) + '['+name_from_id(fwdm.get('user_id'))+']', fwdm, k+1)
 def getHistory(count, print_numbers, uid):
         if not isinstance(uid, int): uid = mn(uid)
+        chat = uid>=2000000000
         unread = False
         history = get_long_list('messages.getHistory', {'user_id': uid}, count, HI_OFFSET_CONSTANT)
         inoutchar = ''
@@ -226,11 +238,9 @@ def getHistory(count, print_numbers, uid):
                                 printsn(inoutchar)
                 if print_numbers:
                         printsn('['+str(message.get('id'))+']')
-                print_message('', message, 0)
+                print_message('['+name_from_id(message.get('user_id'))+']' if chat else '', message, 0)
                 if print_numbers: printsn(printtime(message.get('date')))
         if not print_numbers: printsn(printtime(message.get('date')))
-def iam():
-        if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+str(prevuserid)+':')
 def showprintm():
         master=Tk()
         master.wm_attributes("-topmost", 1)
@@ -261,21 +271,25 @@ def messaging():
                                         continue												
                                 def r(c): return l(s)==c
                                 if r("?"):
-                                        print("' - wait regime\n+ - attach\n~ or ' - waittime for wait regime\nn - mark notifications as read\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image\nt - input raw api call\nl - like something\nv - find an hd-video\na - find an audio; A - find an audio of exact author, title or id\nx - raw link to audio/video\nu - user info\nf - friend someone/join a group/see friends of\nb - post to the wall - warning: makes you online!\nr - reset\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\nd - delete messages by ids\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\nq - quit\ng - user IP and location\n? - this help info")
+                                        print("' - wait regime\n+ - attach (? for more info)\n~ or ' - waittime for wait regime\nn - mark notifications as read\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio (? for help); A - find an audio of exact author (? for help), title or id\nx - raw link to audio/video (x of video2982_242 is player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages by ids\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\ng - user IP and location\n? - this help info\nq - quit")
                                         continue
                                 if r("'"): return(-1)
                                 if r("+"):
-                                        #print('[forward messages ids (e.g. 1232,1233,1237) | attachments (e.g. photo123123_123223,audio-34232_23123)]')
                                         s = cin()
                                         if s is None: return(0)
-                                        if r("u"):
+                                        if r("?"):
+                                                print('forward messages ids (e.g. 1232,1233,1237) |\nattachments (e.g. photo123123_123223,audio-34232_23123) |\ns Subject of the message |\nu - upload photo to message (input file adress or nothing to upload Безымянный.png) |\nw - upload photo to wallpost (same here)')
+                                                continue
+                                        if r("u"): uploades = ['photos.getMessagesUploadServer', 'photos.saveMessagesPhoto']
+                                        elif r("w"): uploades = ['photos.getWallUploadServer', 'photos.saveWallPhoto']
+                                        if uploades:
                                                 s = cin()
                                                 if s is None: return(0)
                                                 if s.strip()=='': s='Безымянный.png'
-                                                upload_url = call_api('photos.getMessagesUploadServer', {})
+                                                upload_url = call_api(uploades[0], {})
                                                 if upload_url: upload_stuff = call_api(upload_url.get('upload_url'), s)
                                                 else: return(0)
-                                                if upload_stuff: uploaded_photo = call_api('photos.saveMessagesPhoto', upload_stuff)
+                                                if upload_stuff: uploaded_photo = call_api(uploades[1], upload_stuff)      
                                                 else: return(0)
                                                 if uploaded_photo: s = 'photo'+str(uploaded_photo[0].get('owner_id'))+'_'+str(uploaded_photo[0].get('id'))
                                                 print('\n'+s)
@@ -352,8 +366,7 @@ def messaging():
                                                         print_attachments(comment.get('attachments'))
                                                         printsn('\n'+str(comment.get('likes').get('count'))+' likes')
                                                         printsn('____')
-                                        print(printm)
-                                        printm=''
+                                        printms()
                                         continue
                                 elif r(":"):
                                         s = cin()
@@ -398,10 +411,37 @@ def messaging():
                                         lowner, lid = what.split('_') #ifLiked - likes.delete
                                         print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                         continue
+                                elif r("d"):
+                                        print('DELETE WALL POST')
+                                        s = cin()
+                                        if s is None: return(0)
+                                        wcrop = s.find('wall')
+                                        if wcrop+1: s = s[wcrop+4:]
+                                        wowner, wid = s.split('_')
+                                        wall = call_api('wall.getById',{'posts':s})
+                                        if not wall: return[0]
+                                        post = wall[0]
+                                        printsn('\n'+charfilter(post.get('text')))              
+                                        print_attachments(post.get('attachments'))
+                                        printms()
+                                        print('DELETE THIS POST?\nY\\N')
+                                        delete_confirmation = cin()
+                                        if delete_confirmation is None: return(0)
+                                        if l(delete_confirmation)=='y': print(call_api('wall.delete', {'owner_id': wowner, 'post_id': wid}))
+                                        continue
+                                elif r("o"):
+                                        s = cin()
+                                        if s is None: return(0)
+                                        ofname = 'file'+s[s.rfind('.'):]
+                                        with open(ofname, 'wb') as f:
+                                                f.write(requests.get(s).content)
+                                        os.system(ofname)
+                                        continue
                                 elif r("v"):
                                         s = cin()
                                         if s is None: return(0)
-                                        v = call_api('video.search', {'q':s, 'sort': '10', 'hd': '1', 'filters': 'long', 'adult': '1'})
+                                        vhd = int(s.isupper())
+                                        v = call_api('video.search', {'q':s, 'sort': 2, 'hd': vhd, 'filters': 'long'*vhd, 'adult': '1'})
                                         if v is None: return(0)
                                         for vid in v.get('items'):
                                                 print(vid.get('title')) #print(vid.get('player'))
@@ -420,7 +460,7 @@ def messaging():
                                                 for x in aur: print(x, aur[x], sep='\t\t')
                                         elif s.find('video_ext')+1:
                                                 x = requests.get(s).text
-                                                if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')>=0:
+                                                if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')+1:
                                                         print('Adult content error')
                                                         continue
                                                 xd = x.find('video_max_hd = ')
@@ -429,7 +469,7 @@ def messaging():
                                                 hds = ['240', '360', '480', '720', '1080']
                                                 video_url = x[x.find('url'+hds[video_max_hd])+7:]
                                                 video_url = video_url[:video_url.find('&amp;')]
-                                                print(video_url)
+                                                print(video_url)       
                                         else:
                                                 s = s[s.find('video')+5:]
                                                 api_call = call_api('video.get', {'videos': s})
@@ -446,13 +486,14 @@ def messaging():
                                                 print(call_api('audio.add', {'owner_id': int(add_owner_id[6:]), 'audio_id': int(add_audio_id)}))
                                                 continue
                                         big_audio_flag = s.isupper()
-                                        print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget][start num]\n[Number]\n[Search string]')
                                         m3u_flag = True
                                         wget_flag = False
                                         wget_start_num = None
                                         s = cin()
                                         if s is None: return(0)
-                                        if l(s)=='here':
+                                        if r("?"):
+                                                print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget][start num]\n[Number]\n[Search string]')
+                                        if r("here"):
                                                 m3u_flag = False
                                                 s = cin()
                                                 if s is None: return(0)
@@ -561,8 +602,11 @@ def messaging():
                                                 friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
                                                 if friend_list:
                                                         for friend in friend_list:
-                                                                try: print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
+                                                                try:
+                                                                        print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
+                                                                        uidscache[friend.get('id')] = friend
                                                                 except KeyboardInterrupt: break
+                                                saveinstance()
                                         else:
                                                 suserid = mn(s)
                                                 if suserid<0: print(call_api('groups.join', {'group_id': -suserid}))
@@ -628,11 +672,11 @@ def messaging():
                                         if huid is None: return(0)
                                         huid = mn(huid)
                                         getHistory(INFINITY, True, huid)
-                                        with open('history_' + str(idscache[token_num].get('id')) + '_to_' + huid + '.txt', 'w', encoding='utf-8') as f: f.write(printm)
+                                        with open('history_' + str(idscache[token_num].get('id')) + '_to_' + name_from_id(huid) + '.txt', 'w', encoding='utf-8') as f: f.write(printm)
                                         printm=''
                                         print()
                                         continue
-                                elif r("d"):
+                                elif r("-"):
                                         print('DELETE MESSAGES BY IDS.\nInput message ids, separated with commas.')
                                         ids = cin()
                                         if ids is None: return(0)
@@ -644,13 +688,12 @@ def messaging():
                                                 del_uid = str(mes.get('user_id'))
                                                 if (mes.get('out')==0): printsn('>'+del_uid)
                                                 else: printsn('<'+del_uid)
-                                                print_message(mes, 0)
-                                        print(printm)
+                                                print_message('', mes, 0)
+                                        printms()
                                         print('DELETE THESE MESSAGES?\nY\\N')
                                         delete_confirmation = cin()
                                         if delete_confirmation is None: return(0)
-                                        if l(delete_confirmation)=='y':
-                                                print(call_api('messages.delete', {'message_ids': ids}))
+                                        if l(delete_confirmation)=='y': print(call_api('messages.delete', {'message_ids': ids}))
                                         continue
                                 elif r("z"):
                                         s = cin()
@@ -696,21 +739,16 @@ def messaging():
         if (m==''): return(0)
         elif (m=='\n')and not attachments and not forward_messages:
                 call_api('messages.markAsRead', {'peer_id': userid})
-                printm='\n'
                 getHistory(10, False, userid)
-                print(printm)
-                printm = '' #return(-1)
+                printms() #return(-1)
         elif (l(m)=='#'):
-                printm='\n'
                 getHistory(200, False, userid)
-                print(printm)
-                printm = ''
+                printms()
         else:
                 resh = re.match('\n[#|№]+', m)
                 if resh:
                         getHistory((resh.endpos-2)*200, True, userid)
-                        print(printm)
-                        printm = ''
+                        printms()
                 else:
                         if userid>=2000000000:
                                 meth = 'chat_id'
@@ -787,9 +825,7 @@ def check_inbox():
                         respname = getcached(uid)
                         if respname: printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                         getHistory(N, False, uid)
-                        if not looping:
-                                print(printm)
-                                printm=''
+                        if not looping: printms()
                 #if r and t: printsn("-------")
                 for x in nitems:
                         parent = x.get('parent')
@@ -833,8 +869,8 @@ def main():
                 mes=messaging()
                 if mes<0:
                         if mes==-2:
-                                printm='\n'
-                                print(printm) if check_inbox()>0 else print()
+                                if check_inbox()>0: printms()
+                                else: printm='\n'
                         elif mes==-1:
                                 printm=''
                                 looping = True
@@ -849,7 +885,7 @@ def main():
                                                 break
                                 else:
                                         showprintm()
-                                        print(printm)
+                                        printms()
                                 looping = False
                         elif mes==-3: return
 if __name__ == '__main__': main()
