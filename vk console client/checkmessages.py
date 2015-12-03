@@ -198,7 +198,7 @@ def print_attachments(attache):
                                         if link is not None:
                                                 printsn(link)
                                                 break
-                        #elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
+                        elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
                         elif atype=='link':
                                 printsn('['+stuff.get('title')+']\n['+stuff.get('description')+']\n'+stuff.get('url'))
                                 return
@@ -820,9 +820,14 @@ def check_inbox():
                 else:
                         t = 0
                         items = []
-                A+=r+t
+                a=r+t
+                A+=a
                 printsn('\n'+myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
-                if not looping: printms()
+                if not looping:
+                        if a: printms()
+                        else:
+                                printm=''
+                                print()
                 for x in items:
                         N = x.get('unread')
                         mes = x.get('message')
@@ -883,11 +888,7 @@ def main():
         while True:
                 mes=messaging()
                 if mes<0:
-                        if mes==-2:
-                                if check_inbox()>0: pass#printms()
-                                else:
-                                        print()
-                                        printm=''
+                        if mes==-2: check_inbox()
                         elif mes==-1:
                                 looping = True
                                 while (check_inbox()==0):
