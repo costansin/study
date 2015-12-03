@@ -822,6 +822,7 @@ def check_inbox():
                         items = []
                 A+=r+t
                 printsn('\n'+myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
+                if not looping: printms()
                 for x in items:
                         N = x.get('unread')
                         mes = x.get('message')
@@ -835,7 +836,7 @@ def check_inbox():
                                 if chat: call_api('messages.markAsRead', {'peer_id': 2000000000+chat_id}) #autoread
                                 continue
                         respname = getcached(uid)
-                        if respname: printsn(respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
+                        if respname: printsn('\n'+respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                         getHistory(N, False, uid)
                         if not looping: printms()
                 if r and t: printsn("-------")
@@ -899,7 +900,6 @@ def main():
                                                 break
                                 else:
                                         showprintm()
-                                        print()
                                         printms()
                                 looping = False
                         elif mes==-3: return
