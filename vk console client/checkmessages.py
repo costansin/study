@@ -270,12 +270,12 @@ def messaging():
                         if (len(s)==1):
                                 if s.isdigit():
                                         n = int(s)
-                                        if n<=len(token_list): token_num = n
+                                        if n<len(token_list): token_num = n
                                         iam()
                                         continue												
                                 def r(c): return l(s)==c
                                 if r("?"):
-                                        print("' - wait regime\n+ - attach (? for more info)\n~ or ' - waittime for wait regime\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio (? for help); A - find an audio of exact author (? for help), title or id\nx - raw link to audio/video (x of video2982_242 is player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages by ids\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\ng - user IP and location\n? - this help info\nq - quit")
+                                        print("' - wait regime\n+ - attach (? for more info)\n~ or ' - waittime for wait regime\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio (? for help); A - find an audio of exact author (? for help), title or id\nx - raw link to audio/video (x of video2982_242 is player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (? for help)\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\ng - user IP and location\n? - this help info\nq - quit")
                                         continue
                                 if r("'"): return(-1)
                                 if r("+"):
@@ -301,7 +301,7 @@ def messaging():
                                         elif l(s[0])=='s': subject = s[2:] #s_The subject of my message
                                         else: attachments += ','+s
                                         continue
-                                if r("~")or r("`"):
+                                if r("~") or r("`"):
                                         s = cin()
                                         if s is None: return(0)
                                         try: waitTime = int(s)
@@ -403,6 +403,9 @@ def messaging():
                                 elif r("t"):
                                         s = cin()
                                         if s is None: return(0)
+                                        if r("?"):
+                                                print("'api_method', {'param1': 'value1', 'param2': 'value2', ...}")
+                                                continue
                                         lit = ast.literal_eval(s)
                                         g = call_api(*lit)
                                         print(charfilter(str(g)))
@@ -415,23 +418,7 @@ def messaging():
                                         lowner, lid = what.split('_') #ifLiked - likes.delete
                                         print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                         continue
-                                elif r("d"):
-                                        print('DELETE WALL POST')
-                                        s = cin()
-                                        if s is None: return(0)
-                                        wcrop = s.find('wall')
-                                        if wcrop+1: s = s[wcrop+4:]
-                                        wowner, wid = s.split('_')
-                                        wall = call_api('wall.getById',{'posts':s})
-                                        if not wall: return[0]
-                                        post = wall[0]
-                                        printsn('\n'+charfilter(post.get('text')))              
-                                        print_attachments(post.get('attachments'))
-                                        printms()
-                                        print('DELETE THIS POST?\nY\\N')
-                                        delete_confirmation = cin()
-                                        if delete_confirmation is None: return(0)
-                                        if l(delete_confirmation)=='y': print(call_api('wall.delete', {'owner_id': wowner, 'post_id': wid}))
+                                elif r("d"): #docs
                                         continue
                                 elif r("o"):
                                         s = cin()
@@ -689,23 +676,38 @@ def messaging():
                                         print()
                                         continue
                                 elif r("-"):
-                                        print('DELETE MESSAGES BY IDS.\nInput message ids, separated with commas.')
-                                        ids = cin()
-                                        if ids is None: return(0)
-                                        api_call = call_api('messages.getById', {'message_ids': ids})
-                                        if api_call: delete_list = api_call.get('items')
-                                        else: return(0)
-                                        printm = ''
-                                        for mes in delete_list:                                                        
-                                                del_uid = str(mes.get('user_id'))
-                                                if (mes.get('out')==0): printsn('>'+del_uid)
-                                                else: printsn('<'+del_uid)
-                                                print_message('', mes, 0)
+                                        s = cin()
+                                        if s is None: return(0)
+                                        if r("?"):
+                                                print('Deleting messages (e.g. 5123,5124,5653)\nor a wall post (e.g. [https://vk.com/wall]-2424_2123)')
+                                                continue
+                                        dwall = s.find('_')+1
+                                        if dwall:
+                                                wcrop = s.find('wall')
+                                                if wcrop+1: s = s[wcrop+4:]
+                                                print(s)
+                                                wowner, wid = s.split('_')
+                                                wall = call_api('wall.getById',{'posts':s})
+                                                if not wall: return[0]
+                                                post = wall[0]
+                                                printsn('\n'+charfilter(post.get('text')))              
+                                                print_attachments(post.get('attachments'))
+                                        else:
+                                                api_call = call_api('messages.getById', {'message_ids': s})
+                                                if api_call: delete_list = api_call.get('items')
+                                                else: return(0)
+                                                printm = ''
+                                                for mes in delete_list:                                                        
+                                                        del_uid = str(mes.get('user_id'))
+                                                        if (mes.get('out')==0): printsn('>'+del_uid)
+                                                        else: printsn('<'+del_uid)
+                                                        print_message('', mes, 0)                                        
                                         printms()
-                                        print('DELETE THESE MESSAGES?\nY\\N')
+                                        print('DELETE THAT?\nY\\N')
                                         delete_confirmation = cin()
                                         if delete_confirmation is None: return(0)
-                                        if l(delete_confirmation)=='y': print(call_api('messages.delete', {'message_ids': ids}))
+                                        if l(delete_confirmation)=='y':
+                                                 print(call_api('wall.delete', {'owner_id': wowner, 'post_id': wid}) if dwall else call_api('messages.delete', {'message_ids': s}))
                                         continue
                                 elif r("z"):
                                         s = cin()
