@@ -270,7 +270,9 @@ def messaging():
                         if (len(s)==1):
                                 if s.isdigit():
                                         n = int(s)
-                                        if n<len(token_list): token_num = n
+                                        if n<len(token_list):
+                                                token_num = n
+                                                prevuserid = idscache[n].get('id')
                                         iam()
                                         continue												
                                 def r(c): return l(s)==c
