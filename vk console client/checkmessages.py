@@ -177,6 +177,11 @@ def name_from_id(uid):
         return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')'
 def iam():
         if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+name_from_id(prevuserid)+':')
+def photolink(photo):
+        for size in photosizes:
+                link=photo.get('photo_'+str(size))
+                if link is not None: return link
+        return None
 def print_attachments(attache):
         if attache is not None:
                 for attached in attache:
@@ -192,12 +197,7 @@ def print_attachments(attache):
                                 except: owner = None
                         cropadress = str(owner)+'_'+str(stuff.get('id'))
                         adress = croptype + cropadress
-                        if (atype=='photo')or(atype=='sticker'):
-                                for size in photosizes:
-                                        link=stuff.get('photo_'+str(size))
-                                        if link is not None:
-                                                printsn(link)
-                                                break
+                        if (atype=='photo')or(atype=='sticker'): printsn(photolink(stuff))
                         elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
                         elif atype=='link':
                                 printsn('['+stuff.get('title')+']\n['+stuff.get('description')+']\n'+stuff.get('url'))
@@ -449,7 +449,10 @@ def messaging():
                                 elif r("x"):
                                         s = cin() #get the video from a "player"-link or "player"-link from video id
                                         if s is None: return(0)
-                                        if not s.find('audio'):
+                                        if not s.find('photo'):
+                                                api_call = call_api('photos.getById', {'photos': s[5:]})
+                                                if api_call: print(photolink(api_call[0]))
+                                        elif not s.find('audio'):
                                                 owner, aid = s[5:].split('_')
                                                 api_call = call_api('audio.get', {'owner_id': owner, 'audio_ids': aid})
                                                 if not api_call: return(0)
