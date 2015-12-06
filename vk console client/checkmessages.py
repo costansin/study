@@ -101,7 +101,7 @@ def getcached(uid):
         global uidscache
         result = uidscache.get(uid)
         if result is None:
-                api_call = call_api('users.get', {'user_ids': uid})
+                api_call = (call_api('users.get', {'user_ids': uid}) if uid>0 else call_api('groups.getById', {'group_ids': -uid}))
                 if api_call: result = api_call[0]
                 if result: uidscache[uid] = result
                 saveinstance()
@@ -174,7 +174,7 @@ def printsn(s):
 def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('%d %b %Y (%a) %H:%M:%S')+']')
 def name_from_id(uid):
         cachedid = getcached(uid)
-        return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')'
+        return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')' if uid>0 else cachedid.get('name')
 def iam():
         if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+name_from_id(prevuserid)+':')
 def photolink(photo):
@@ -752,11 +752,11 @@ def messaging():
                 print(call_api('wall.post', {'message': m, 'attachments': attachments}))
                 return(0)
         if userid is None: return(0)
+        if (m==''): return(0)
         if userid<0:
                  print(call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}))
                  return(0)
-        if (m==''): return(0)
-        elif (m=='\n')and not attachments and not forward_messages:
+        if (m=='\n')and not attachments and not forward_messages:
                 call_api('messages.markAsRead', {'peer_id': userid})
                 getHistory(10, False, userid)
                 printms() #return(-1)
