@@ -288,6 +288,7 @@ def messaging():
                                                 continue
                                         if r("u"): uploades = ['photos.getMessagesUploadServer', 'photos.saveMessagesPhoto']
                                         elif r("w"): uploades = ['photos.getWallUploadServer', 'photos.saveWallPhoto']
+                                        else: uploades = None
                                         if uploades:
                                                 s = cin()
                                                 if s is None: return(0)
@@ -906,6 +907,7 @@ def main():
                                         except KeyboardInterrupt:
                                                 print()
                                                 break
+                                        printm=''
                                 else:
                                         showprintm()
                                         printms()
