@@ -475,9 +475,7 @@ def messaging():
                                         if s is None: return(0)
                                         v = call_api('video.search', {'q':s, 'sort': 2, 'hd': vhd, 'filters': 'long'*vhd, 'adult': '1'})
                                         if v is None: return(0)
-                                        for vid in v.get('items'):
-                                                print(vid.get('title')) #print(vid.get('player'))
-                                                print('video'+str(vid.get('owner_id'))+'_'+str(vid.get('id')))
+                                        for vid in v.get('items'): print('video'+str(vid.get('owner_id'))+'_'+str(vid.get('id')), vid.get('title'), sep='\t') #print(vid.get('player')))
                                         continue
                                 elif r("x"):
                                         s = cin() #get the video from a "player"-link or "player"-link from video id
@@ -505,6 +503,9 @@ def messaging():
                                                                 if v.get('is_private'): print('ADULT_CONTENT')
                                                                 s = v.get('player')
                                                                 print(s)
+                                        else:
+                                                print("photo123123_123123 or audio1231231_12213 or video2123_123123 or http://vk.com/video_ext.php?oid=...")
+                                                continue
                                         x = requests.get(s).text
                                         if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')+1:
                                                 print('Adult content error')
