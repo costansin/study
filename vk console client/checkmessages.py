@@ -2,7 +2,7 @@
 import requests, time, datetime, ast, os, re, random
 from tkinter import *
 sleepTime, waitTime = 0.34, 53
-INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
+INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, block, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, [], 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
 smiley = re.compile('|'.join([re.escape(sm) for sm in rev_simple_smileys])+r'|\d+') #warning: all numbers are smileys!
@@ -122,10 +122,10 @@ def get_long_list(method, params, l_count, OFFSET_CONSTANT):
                 print(len(long_list), end='')
         return long_list
 def cin():
-        try:
-                s = input()
-                return(s)
-        except KeyboardInterrupt: exit
+        if block: return block.pop()
+        else:
+                try: return(input())
+                except KeyboardInterrupt: exit
 def read_header():
         global header
         with open(headerfile, 'r') as header_file:
@@ -138,6 +138,10 @@ def read_mnemonics():
                 for line in f:
                         key, value = line.split()
                         mnemonics[key] = int(value)
+def read_ignore():
+        global ignore
+        with open(ignorefile, 'r') as f:
+                for line in f: ignore.append(mn(line.strip()))
 def l(wrong):
         wrong = wrong.lower().strip() 
         right = ''  #re.match("^[' 'A-Za-z0-9_-]*$", wrong)
@@ -152,10 +156,6 @@ def mn(idstring):
         else:
                 try: return int(idstring)
                 except: return #api_call = call_api('users.get', {'user_ids': idstring}) #if api_call: return str(api_call[0].get('id')) #else: return '0'
-def read_ignore():
-        global ignore
-        with open(ignorefile, 'r') as f:
-                for line in f: ignore.append(mn(line.strip()))
 def smiley_hex(c, sh): return hex(c+sh).upper()[2:]+'.png'
 def charfilter(s):
         r=''
@@ -256,7 +256,7 @@ def showprintm():
         w.pack()
         master.mainloop()
 def messaging():
-        global token_num, printm, waitTime, prevuserid
+        global token_num, printm, waitTime, prevuserid, block
         iam()
         m = ''
         s = ''
@@ -279,11 +279,21 @@ def messaging():
                                         iam()
                                         continue												
                                 def r(c): return l(s)==c
-                                if r("?"):
-                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (? for help)\nz - latinize the layout\ng - user IP and location\n? - this help info\nq - quit")
+                                if r("{"):
+                                        while s!='}':
+                                                try: s = input()
+                                                except KeyboardInterrupt:
+                                                        block = []
+                                                        break
+                                                block.append(s)
+                                        block.pop()
+                                        block.reverse()
                                         continue
-                                if r("'"): return(-1)
-                                if r("+"):
+                                elif r("?"):
+                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (? for help)\nz - latinize the layout\ng - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
+                                        continue
+                                elif r("'"): return(-1)
+                                elif r("+"):
                                         s = cin()
                                         if s is None: return(0)
                                         if r("?"):
