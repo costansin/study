@@ -434,7 +434,7 @@ def messaging():
                                         elif r("t"):
                                                 s = cin()
                                                 if s is None: return(0)
-                                                dtype = s
+                                                dtype = s.lower()
                                                 s = cin()
                                                 if s is None: return(0)
                                         docdata = {'act': 'search_docs', 'al': '1', 'offset': '0', 'oid': idscache[token_num].get('id'), 'q': s}
