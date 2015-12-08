@@ -2,16 +2,16 @@
 import requests, time, datetime, ast, os, re, random
 from tkinter import *
 sleepTime, waitTime = 0.34, 53
-INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, looping, photosizes, printm, width, height, mnemonics, ignore, idscache, uidscache, lastNviewcache, prob, token_num, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], [], {}, [], [], 0, 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
+INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
 smiley = re.compile('|'.join([re.escape(sm) for sm in rev_simple_smileys])+r'|\d+') #warning: all numbers are smileys!
 def start():        
-        for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile:
+        for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile:
                 if not os.path.exists(x):
                         with open(x, 'w') as f: pass
         global token_list, raspyadress, smileys
-        with open(tokenfile, 'r') as token_file: token_list = [token[:-1] for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
+        with open(tokenfile, 'r') as token_file: token_list = [token.strip() for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
         with open(raspyafile, 'r') as raspya_file: raspyadress = [a for a in raspya_file.readlines() if a[0]!='#'] #start line with # to make it comment
         if os.path.isdir('smileys'): smileys = os.listdir('smileys')
 def call_api(method, params):
@@ -101,7 +101,7 @@ def getcached(uid):
         global uidscache
         result = uidscache.get(uid)
         if result is None:
-                api_call = (call_api('users.get', {'user_ids': uid}) if uid>0 else call_api('groups.getById', {'group_ids': -uid}))
+                api_call = (call_api('users.get', {'user_ids': uid}) if uid>=0 else call_api('groups.getById', {'group_ids': -uid}))
                 if api_call: result = api_call[0]
                 if result: uidscache[uid] = result
                 saveinstance()
@@ -126,13 +126,18 @@ def cin():
                 s = input()
                 return(s)
         except KeyboardInterrupt: exit
+def read_header():
+        global header
+        with open(headerfile, 'r') as header_file:
+                for line in header_file.readlines():
+                        colon = line.find(':')
+                        header[line[:colon].strip()] = line[colon+1:].strip()
 def read_mnemonics():
-        result = {}
+        global mnemonics
         with open(mnemofile, 'r') as f:
                 for line in f:
                         key, value = line.split()
-                        result[key] = int(value)
-        return result
+                        mnemonics[key] = int(value)
 def l(wrong):
         wrong = wrong.lower().strip() 
         right = ''  #re.match("^[' 'A-Za-z0-9_-]*$", wrong)
@@ -148,12 +153,9 @@ def mn(idstring):
                 try: return int(idstring)
                 except: return #api_call = call_api('users.get', {'user_ids': idstring}) #if api_call: return str(api_call[0].get('id')) #else: return '0'
 def read_ignore():
-        result = []
+        global ignore
         with open(ignorefile, 'r') as f:
-                for line in f:
-                        line = line.strip()
-                        result.append(mn(line))
-        return result
+                for line in f: ignore.append(mn(line.strip()))
 def smiley_hex(c, sh): return hex(c+sh).upper()[2:]+'.png'
 def charfilter(s):
         r=''
@@ -174,7 +176,8 @@ def printsn(s):
 def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('%d %b %Y (%a) %H:%M:%S')+']')
 def name_from_id(uid):
         cachedid = getcached(uid)
-        return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')' if uid>0 else cachedid.get('name')
+        if cachedid: return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')' if uid>=0 else cachedid.get('name')
+        else: return 'DELETED'
 def iam():
         if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+name_from_id(prevuserid)+':')
 def photolink(photo):
@@ -277,7 +280,7 @@ def messaging():
                                         continue												
                                 def r(c): return l(s)==c
                                 if r("?"):
-                                        print("' - wait regime\n+ - attach (? for more info)\n~ or ' - waittime for wait regime\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio (? for help); A - find an audio of exact author (? for help), title or id\nx - raw link to audio/video (x of video2982_242 is player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (? for help)\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\ng - user IP and location\n? - this help info\nq - quit")
+                                        print("' - wait regime\n+ - attach (? for more info)\n~ or ' - waittime for wait regime\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio (? for help); A - find an audio of exact author (? for help), title or id\nd - find a doc\nx - raw link to audio/video (x of video2982_242 is player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (? for help)\nz - see what would it be if latinize the layout - using latinizing function all the wrong (russian) layout or wrong case commands would be properly understood)\ng - user IP and location\n? - this help info\nq - quit")
                                         continue
                                 if r("'"): return(-1)
                                 if r("+"):
@@ -421,7 +424,34 @@ def messaging():
                                         lowner, lid = what.split('_') #ifLiked - likes.delete
                                         print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                         continue
-                                elif r("d"): #docs
+                                elif r("d"):
+                                        s = cin()
+                                        if s is None: return(0)
+                                        dtype = None
+                                        if r("?"):
+                                                print("[T\ntype]\nsearch string")
+                                                continue
+                                        elif r("t"):
+                                                s = cin()
+                                                if s is None: return(0)
+                                                dtype = s
+                                                s = cin()
+                                                if s is None: return(0)
+                                        docdata = {'act': 'search_docs', 'al': '1', 'offset': '0', 'oid': idscache[token_num].get('id'), 'q': s}
+                                        if not header:
+                                                print("Please open your browser, open vk.com/docs, Ctrl+Shift+J, click Network tab, search something in docs search field, choose a request for docs.php, copy all Request Headers (it's Accept:*/*, Accept-Encoding:gzip, deflate, etc.), and paste here.")
+                                                h = ''
+                                                for i in range(12):
+                                                        s = cin()
+                                                        if s is None: return(0)
+                                                        h += s+'\n'
+                                                with open(headerfile, 'w') as header_file: header_file.write(h)
+                                                read_header()
+                                        r = requests.request(method="POST", url="http://vk.com/docs.php", headers=header, data=docdata) #docheader["Referer"] = "http://vk.com/docs"
+                                        v = r.text[r.text.find('[['):r.text.rfind(']]')+2]
+                                        lit = ast.literal_eval(v)
+                                        if dtype: lit = [doc for doc in lit if doc[1]==dtype]
+                                        for doc in lit: print(doc[2], 'doc'+str(doc[4])+'_'+str(doc[0])) #doc[3] - size and date
                                         continue
                                 elif r("o"):
                                         s = cin()
@@ -888,11 +918,8 @@ def check_inbox():
         token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
-        global printm, mnemonics, ignore, waitTime, looping
-        start()
-        mnemonics = read_mnemonics()
-        ignore = read_ignore()
-        getcache()
+        global printm, waitTime, looping
+        start(), read_mnemonics(), read_ignore(), read_header(), getcache()
         while True:
                 mes=messaging()
                 if mes<0:
