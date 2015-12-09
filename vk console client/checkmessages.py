@@ -544,6 +544,7 @@ def messaging():
                                         else:
                                                 print("photo123123_123123 or audio1231231_12213 or video2123_123123 or http://vk.com/video_ext.php?oid=...")
                                                 continue
+                                        if not (s.find('video_ext')+1): continue
                                         x = requests.get(s).text
                                         if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')+1:
                                                 print('Adult content error')
