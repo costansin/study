@@ -1,18 +1,24 @@
 # -*- coding: utf-8
-import requests, time, datetime, ast, os, re, random
+import requests, time, datetime, ast, os, re, random, bisect
 from tkinter import *
 sleepTime, waitTime = 0.34, 53
-INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, block, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, [], 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
+INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, delayfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, block, delayed, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', 'delay.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, [], [], 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
 smiley = re.compile('|'.join([re.escape(sm) for sm in rev_simple_smileys])+r'|\d+') #warning: all numbers are smileys!
 def start():        
-        for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile:
+        for x in mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, delayfile:
                 if not os.path.exists(x):
                         with open(x, 'w') as f: pass
-        global token_list, raspyadress, smileys
+        global token_list, raspyadress, smileys, delayed
         with open(tokenfile, 'r') as token_file: token_list = [token.strip() for token in token_file.readlines() if token[0]!='#'] #start line with # to make it comment
         with open(raspyafile, 'r') as raspya_file: raspyadress = [a for a in raspya_file.readlines() if a[0]!='#'] #start line with # to make it comment
+        with open(delayfile, 'r') as delay_file:
+                delaystr = delay_file.read()
+                try: delayed = ast.literal_eval(delaystr)
+                except:
+                        if delaystr: print(delaystr+'\nWILL BE REMOVED FROM DELAY FILE!')
+                        delayed = []
         if os.path.isdir('smileys'): smileys = os.listdir('smileys')
 def call_api(method, params):
         #print(method, params)
@@ -27,9 +33,9 @@ def call_api(method, params):
                         v = query.split('=')
                         params[v[0]]=v[1]
         else:
-                params["access_token"] = token_list[token_num]
-                params["v"] = "5.40"
-                url = "https://api.vk.com/method/" + method
+                params['access_token'] = token_list[token_num]
+                params['v'] = "5.40"
+                url = 'https://api.vk.com/method/' + method
                 files = None
         E = False
         while True:
@@ -38,7 +44,7 @@ def call_api(method, params):
                         try: result = requests.post(url, data=params, files=files)
                         except KeyboardInterrupt: return
                         result = result.json()
-                        if 'error' not in result: return result["response"] if "response" in result else result
+                        if 'error' not in result: return result['response'] if 'response' in result else result
                         else:
                                 err = result.get('error')
                                 msg = err.get('error_msg')
@@ -122,7 +128,7 @@ def get_long_list(method, params, l_count, OFFSET_CONSTANT):
                 print(len(long_list), end='')
         return long_list
 def cin():
-        if block: return block.pop()
+        if block: return block.pop(0)
         else:
                 try: return(input())
                 except KeyboardInterrupt: exit
@@ -176,49 +182,51 @@ def printsn(s):
 def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('%d %b %Y (%a) %H:%M:%S')+']')
 def name_from_id(uid):
         cachedid = getcached(uid)
-        if cachedid: return cachedid.get('first_name')+' '+cachedid.get('last_name')+' ('+str(cachedid.get('id'))+')' if uid>=0 else cachedid.get('name')
-        else: return 'DELETED'
+        if cachedid:
+                first_name = cachedid.get('first_name', '')
+                if first_name=='DELETED': first_name = ''
+                return first_name+' '+cachedid.get('last_name', '')+' ('+str(cachedid.get('id', ''))+')' if uid>=0 else cachedid.get('name', '')
+        else: return '0'
 def iam():
-        if idscache: print(idscache[token_num].get('first_name'), idscache[token_num].get('last_name')+' to '+name_from_id(prevuserid)+':')
+        if idscache: print(idscache[token_num].get('first_name', ''), idscache[token_num].get('last_name', '')+' to '+name_from_id(prevuserid)+':')
 def photolink(photo):
         for size in photosizes:
                 link=photo.get('photo_'+str(size))
                 if link is not None: return link
         return None
 def print_attachments(attache):
-        if attache is not None:
-                for attached in attache:
-                        atype = attached.get('type')
-                        cropf = atype.find('_')
-                        if cropf>=0: croptype = atype[:cropf]
-                        else: croptype = atype
-                        stuff = attached.get(atype)
-                        owner = stuff.get('owner_id')
-                        if owner is None: owner = stuff.get('to_id')
-                        if owner is None:
-                                try: owner = -stuff.get('group_id')
-                                except: owner = None
-                        cropadress = str(owner)+'_'+str(stuff.get('id'))
-                        adress = croptype + cropadress
-                        if (atype=='photo')or(atype=='sticker'): printsn(photolink(stuff))
-                        elif atype=='video': adress = adress + '_' + str(stuff.get('access_key')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
-                        elif atype=='link':
-                                printsn('['+stuff.get('title')+']\n['+stuff.get('description')+']\n'+stuff.get('url'))
-                                return
-                        else:
-                                url = stuff.get('url')
-                                if url is None: url = stuff.get('view_url')
-                                if url is not None:
-                                        urlf = url.find('?extra')        
-                                        if (urlf!=-1):
-                                                printsn(stuff.get('artist')+' - '+stuff.get('title'))
-                                                printsn(url[:urlf]+' ')
-                                        else: printsn(url+' ')
-                        printsn(adress+' ')
+        for attached in attache:
+                atype = attached.get('type', '')
+                cropf = atype.find('_')
+                if cropf>=0: croptype = atype[:cropf]
+                else: croptype = atype
+                stuff = attached.get(atype)
+                owner = stuff.get('owner_id', '')
+                if owner is None: owner = stuff.get('to_id', '')
+                if owner is None:
+                        try: owner = -stuff.get('group_id', '')
+                        except: owner = None
+                cropadress = str(owner)+'_'+str(stuff.get('id', ''))
+                adress = croptype + cropadress
+                if (atype=='photo')or(atype=='sticker'): printsn(photolink(stuff))
+                elif atype=='video': adress = adress + '_' + str(stuff.get('access_key', '')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
+                elif atype=='link':
+                        printsn('['+stuff.get('title', '')+']\n['+stuff.get('description', '')+']\n'+stuff.get('url', ''))
+                        return
+                else:
+                        url = stuff.get('url', '')
+                        if url is None: url = stuff.get('view_url', '')
+                        if url is not None:
+                                urlf = url.find('?extra')        
+                                if (urlf!=-1):
+                                        printsn(stuff.get('artist', '')+' - '+stuff.get('title', ''))
+                                        printsn(url[:urlf]+' ')
+                                else: printsn(url+' ')
+                printsn(adress+' ')
 def print_message(prefix, message, k):
         body = prefix + message.get('body')
         if body: printsn(charfilter(body)) if message.get('emoji') else printsn(body)
-        print_attachments(message.get('attachments'))
+        print_attachments(message.get('attachments', []))
         fwd = message.get('fwd_messages')
         if fwd is not None:
                 printsn('     '*k + '[fwd_messages:]')
@@ -265,6 +273,10 @@ def messaging():
         attachments = ''
         forward_messages = ''
         subject = None
+        now = time.time()
+        while delayed and now > delayed[0][0]: block.extend(delayed.pop(0)[1])
+        if block:
+                with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
         while (s=='')or(l(s[-1])!='#'):
                 s = cin()
                 if s is None: return(0)
@@ -280,13 +292,30 @@ def messaging():
                                         continue												
                                 def r(c): return l(s)==c
                                 if r("{"):
+                                        s = cin()
+                                        if s is None: return(0)
+                                        if r("?"):
+                                                print("{\n[DELAY\ntime]\ncommand1\ncommand2\n...\n}")
+                                                continue
+                                        elif r("delay"):
+                                                nowstamp = datetime.datetime.fromtimestamp(time.time())
+                                                print(nowstamp.strftime('input time in format 18:00:00 %d.%m.%Y'))
+                                                s = cin()
+                                                if s is None: return(0)
+                                                delay_time = time.mktime(datetime.datetime.strptime(s, "%H:%M:%S %d.%m.%Y").timetuple())
+                                                s = cin()
+                                                if s is None: return(0)
+                                        else: delay_time = None
                                         while s!='}':
+                                                block.append(s)
                                                 try: s = input()
                                                 except KeyboardInterrupt:
                                                         block = []
                                                         break
-                                                block.append(s)
-                                        block.pop(), block.reverse()
+                                        if delay_time is not None:
+                                                bisect.insort(delayed, (delay_time, block))
+                                                with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
+                                                block = []
                                         continue
                                 elif r("?"):
                                         print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (? for help)\nz - latinize the layout\ng - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
@@ -370,8 +399,8 @@ def messaging():
                                                 if reposted:
                                                         for reposts in reposted:
                                                                 printsn('\t[REPOSTED]\n\t'+charfilter(reposts.get('text')))
-                                                                print_attachments(reposts.get('attachments'))                
-                                                print_attachments(post.get('attachments'))
+                                                                print_attachments(reposts.get('attachments', []))
+                                                print_attachments(post.get('attachments', []))
                                                 printsn('\n'+str(post.get('likes').get('count'))+' likes, '+str(post.get('comments').get('count'))+' comments')
                                                 printsn('____')
                                         if len(wall)==1:
@@ -382,7 +411,7 @@ def messaging():
                                                 wallcomments = get_long_list('wall.getComments', {'owner_id': wowner, 'post_id': wid, 'need_likes': 1},INFINITY,W_OFFSET_CONSTANT)
                                                 for comment in wallcomments:
                                                         printsn('wall'+str(post.get('from_id'))+'_'+str(comment.get('id'))+'\nid'+str(comment.get('from_id'))+'\n\n'+charfilter(comment.get('text')))
-                                                        print_attachments(comment.get('attachments'))
+                                                        print_attachments(comment.get('attachments', []))
                                                         printsn('\n'+str(comment.get('likes').get('count'))+' likes')
                                                         printsn('____')
                                         printms()
@@ -739,7 +768,7 @@ def messaging():
                                                 if not wall: return[0]
                                                 post = wall[0]
                                                 printsn('\n'+charfilter(post.get('text')))              
-                                                print_attachments(post.get('attachments'))
+                                                print_attachments(post.get('attachments', []))
                                         else:
                                                 api_call = call_api('messages.getById', {'message_ids': s})
                                                 if api_call: delete_list = api_call.get('items')
@@ -911,7 +940,7 @@ def check_inbox():
                                 if 'photo' in xtype: printsn('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
                                 else: printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
                                 printsn(parent.get('text'))
-                                print_attachments(parent.get('attachments'))
+                                print_attachments(parent.get('attachments', []))
                         feedback = x.get('feedback')
                         whos = feedback.get('items')
                         if whos is not None:
@@ -924,7 +953,7 @@ def check_inbox():
                                 printsn(xtype)
                         else:
                                 printsn(charfilter(comment))
-                                print_attachments(feedback.get('attachments'))
+                                print_attachments(feedback.get('attachments', []))
                         if not looping: printms()
                 #printsn("_____________")
         token_num = prev_token_num
