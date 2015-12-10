@@ -266,14 +266,7 @@ def showprintm():
 def messaging():
         global token_num, printm, waitTime, prevuserid, block
         iam()
-        m = ''
-        s = ''
-        userid = None
-        wall_flag = False
-        attachments = ''
-        forward_messages = ''
-        subject = None
-        now = time.time()
+        m, s, attachments, forward_messages, userid, wall_flag, wall_edit_flag, subject, now = '', '', '', '', None, False, False, None, time.time()
         while delayed and now > delayed[0][0]: block.extend(delayed.pop(0)[1])
         if block:
                 with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
@@ -318,7 +311,7 @@ def messaging():
                                                 block = []
                                         continue
                                 elif r("?"):
-                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (? for help)\nz - latinize the layout\ng - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
+                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit) (? for help)\nz - latinize the layout\ng - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
                                         continue
                                 elif r("'"): return(-1)
                                 elif r("+"):
@@ -757,7 +750,7 @@ def messaging():
                                         s = cin()
                                         if s is None: return(0)
                                         if r("?"):
-                                                print('Deleting messages (e.g. 5123,5124,5653)\nor a wall post (e.g. [https://vk.com/wall]-2424_2123)')
+                                                print("Deleting messages (e.g. 5123,5124,5653)\nor a wall post (e.g. [https://vk.com/wall]-2424_2123).\Type anything instead 'Y' for the confirmation request and edit the wall post")
                                                 continue
                                         dwall = s.find('_')+1
                                         if dwall:
@@ -785,7 +778,11 @@ def messaging():
                                         delete_confirmation = cin()
                                         if delete_confirmation is None: return(0)
                                         if l(delete_confirmation)=='y':
-                                                 print(call_api('wall.delete', {'owner_id': wowner, 'post_id': wid}) if dwall else call_api('messages.delete', {'message_ids': s}))
+                                                print(call_api('wall.delete', {'owner_id': wowner, 'post_id': wid}) if dwall else call_api('messages.delete', {'message_ids': s}))
+                                        elif dwall:
+                                                print('Edit post:')
+                                                s = ''
+                                                wall_edit_flag = True
                                         continue
                                 elif r("z"):
                                         s = cin()
@@ -821,6 +818,9 @@ def messaging():
                         break
         prevuserid = userid
         m=m[:-1]
+        if wall_edit_flag:
+                print(call_api('wall.edit', {'owner_id': wowner, 'post_id': wid, 'message': m, 'attachments': attachments}))
+                return(0)
         if wall_flag:
                 print(call_api('wall.post', {'message': m, 'attachments': attachments}))
                 return(0)
