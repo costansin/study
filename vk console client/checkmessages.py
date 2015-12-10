@@ -448,12 +448,26 @@ def messaging():
                                         print(charfilter(str(g)))
                                         continue
                                 elif r("l"):
-                                        print('type owner_id\ntypes:\npost comment photo audio video note photo_comment video_comment topic_comment sitepage')
+                                        print('syntax: type owner_id (e.g. audio 26522309_422813886 or post -69528510_158)\ntypes: post, comment, photo, audio, video, note, photo_comment, video_comment, topic_comment, sitepage')
                                         s = cin()
                                         if s is None: return(0)
                                         lobjecttype, what = s.split()
                                         lowner, lid = what.split('_') #ifLiked - likes.delete
-                                        print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        print("now type\n+ to like\n- to unlike\n? to get to know whether you or someone has already liked that\nc - to get the list of who reposted\nf - to get the list of friends who liked\ncf or fc - friends who reposted\nand anything else (e.g. empty string) to get the full list of who liked that")
+                                        s = cin()
+                                        if s is None: return(0)
+                                        if r("+"): print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        elif r("-"): print(call_api('likes.delete', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        elif r("?"):
+                                                print('Whos likes interest you? As always, youself is an empty string, just press Enter.')
+                                                s = cin()
+                                                if s is None: return(0)
+                                                luserid = mn(s)
+                                                print(call_api('likes.isLiked', {'user_id': luserid, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        elif r("c"): print(call_api('likes.getList', {'filter': 'copies', 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        elif r("f"): print(call_api('likes.getList', {'friends_only': 1, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        elif r("cf") or r("fc"): print(call_api('likes.getList', {'filter': 'copies', 'friends_only': 1, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        else: print(call_api('likes.getList', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                         continue
                                 elif r("d"):
                                         s = cin()
@@ -827,8 +841,8 @@ def messaging():
         if userid is None: return(0)
         if (m==''): return(0)
         if userid<0:
-                 print(call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}))
-                 return(0)
+                print(call_api('wall.post', {'owner_id': userid, 'from_group': 1, 'message': m, 'attachments': attachments}))
+                return(0)
         if (m=='\n')and not attachments and not forward_messages:
                 call_api('messages.markAsRead', {'peer_id': userid})
                 getHistory(10, False, userid)
