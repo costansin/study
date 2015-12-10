@@ -699,7 +699,7 @@ def messaging():
                                                 t = mn(s)
                                                 if t<0: friend_id_list = call_api('groups.getMembers', {'group_id': -t, 'count': 1000, 'sort': 'time_desc'})
                                                 else: friend_id_list = call_api('friends.get', {'user_id': t, 'count': 1000})
-                                        if friend_id_list: print_id_list(friend_id_list)
+                                        if friend_id_list is not None: print_id_list(friend_id_list)
                                         else:
                                                 suserid = mn(s)
                                                 if suserid<0: print(call_api('groups.join', {'group_id': -suserid}))
