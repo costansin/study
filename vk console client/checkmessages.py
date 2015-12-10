@@ -2,7 +2,7 @@
 import requests, time, datetime, ast, os, re, random, bisect
 from tkinter import *
 sleepTime, waitTime = 0.34, 53
-INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, delayfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, block, delayed, full_auth_line = 10000000, 300, 200, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', 'delay.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, [], [], 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
+INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, L_OFFSET_CONSTANT, LF_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, delayfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, block, delayed, full_auth_line = 10000000, 300, 200, 100, 1000, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', 'delay.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, [], [], 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
 simple_smileys={128522: ':-)', 128515: ':-D', 128521: ';-)', 128518: 'xD', 128540: ';-P', 128523: ':-p', 128525: '8-)', 128526: 'B-)', 128530: ':-(', 128527: ';-]', 128532: '3(', 128546: ":'(", 128557: ':_(', 128553: ':((', 128552: ':o', 128528: ':|',128524: '3-)', 128519: 'O:)', 128560: ';o', 128562: '8o', 128563: '8|', 128567: ':X', 10084: '<3', 128538: ':-*', 128544: '>(', 128545: '>((', 9786: ':-]', 128520: '}:)', 128077: ':like:', 128078: ':dislike:', 9757: ':up:', 9996: ':v:', 128076: ':ok:'}
 rev_simple_smileys={':-)': 'D83DDE0A.png', ':-D': 'D83DDE03.png', ';-)': 'D83DDE09.png', 'xD': 'D83DDE06.png', ';-P': 'D83DDE1C.png', ':-p': 'D83DDE0B.png', '8-)': 'D83DDE0D.png', 'B-)': 'D83DDE0E.png', ':-(': 'D83DDE12.png', ';-]': 'D83DDE0F.png', '3(': 'D83DDE14.png', ":'(": 'D83DDE22.png', ':_(': 'D83DDE2D.png', ':((': 'D83DDE29.png', ':o': 'D83DDE28.png', ':|': 'D83DDE10.png', '3-)': 'D83DDE0C.png', 'O:)': 'D83DDE07.png', ';o': 'D83DDE30.png', '8o': 'D83DDE32.png', '8|': 'D83DDE33.png', ':X': 'D83DDE37.png', '<3': '2764.png', ':-*': 'D83DDE1A.png', '>(': 'D83DDE20.png', '>((': 'D83DDE21.png', ':-]': '263A.png', '}:)': 'D83DDE08.png', ':like:': 'D83DDC4D.png', ':dislike:': 'D83DDC4E.png', ':up:': '261D.png', ':v:': '270C.png', ':ok:': 'D83DDC4C.png'}
 smiley = re.compile('|'.join([re.escape(sm) for sm in rev_simple_smileys])+r'|\d+') #warning: all numbers are smileys!
@@ -255,6 +255,16 @@ def getHistory(count, print_numbers, uid):
                 print_message('['+name_from_id(message.get('user_id'))+']' if chat else '', message, 0)
                 if print_numbers: printsn(printtime(message.get('date')))
         if not print_numbers: printsn(printtime(message.get('date')))
+def print_id_list(id_list):
+        print_list = call_api('users.get', {'user_ids': str(id_list)[1:-1]})
+        print()
+        if print_list:
+                for pus in print_list:
+                        try:
+                                print(pus.get('first_name'), pus.get('last_name'), pus.get('id'))
+                                uidscache[pus.get('id')] = pus
+                        except KeyboardInterrupt: break
+        saveinstance()
 def showprintm():
         master=Tk()
         master.wm_attributes("-topmost", 1)
@@ -289,7 +299,7 @@ def messaging():
                                         if s is None: return(0)
                                         if r("?"):
                                                 print("{\n[DELAY\ntime]\ncommand1\ncommand2\n...\n}")
-                                                continue
+                                                return(0)
                                         elif r("delay"):
                                                 nowstamp = datetime.datetime.fromtimestamp(time.time())
                                                 print(nowstamp.strftime('input time in format 18:00:00 %d.%m.%Y'))
@@ -312,14 +322,14 @@ def messaging():
                                         continue
                                 elif r("?"):
                                         print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit) (? for help)\nz - latinize the layout\ng - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
-                                        continue
+                                        return(0)
                                 elif r("'"): return(-1)
                                 elif r("+"):
                                         s = cin()
                                         if s is None: return(0)
                                         if r("?"):
                                                 print('forward messages ids (e.g. 1232,1233,1237) |\nattachments (e.g. photo123123_123223,audio-34232_23123) |\ns Subject of the message |\nu - upload photo to message (input file adress or nothing to upload Безымянный.png) |\nw - upload photo to wallpost (same here)')
-                                                continue
+                                                return(0)
                                         if r("u"): uploades = ['photos.getMessagesUploadServer', 'photos.saveMessagesPhoto']
                                         elif r("w"): uploades = ['photos.getWallUploadServer', 'photos.saveWallPhoto']
                                         else: uploades = None
@@ -442,7 +452,7 @@ def messaging():
                                         if s is None: return(0)
                                         if r("?"):
                                                 print("'api_method', {'param1': 'value1', 'param2': 'value2', ...}")
-                                                continue
+                                                return(0)
                                         lit = ast.literal_eval(s)
                                         g = call_api(*lit)
                                         print(charfilter(str(g)))
@@ -456,6 +466,7 @@ def messaging():
                                         print("now type\n+ to like\n- to unlike\n? to get to know whether you or someone has already liked that\nc - to get the list of who reposted\nf - to get the list of friends who liked\ncf or fc - friends who reposted\nand anything else (e.g. empty string) to get the full list of who liked that")
                                         s = cin()
                                         if s is None: return(0)
+                                        like_list = None
                                         if r("+"): print(call_api('likes.add', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                         elif r("-"): print(call_api('likes.delete', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
                                         elif r("?"):
@@ -464,10 +475,11 @@ def messaging():
                                                 if s is None: return(0)
                                                 luserid = mn(s)
                                                 print(call_api('likes.isLiked', {'user_id': luserid, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
-                                        elif r("c"): print(call_api('likes.getList', {'filter': 'copies', 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
-                                        elif r("f"): print(call_api('likes.getList', {'friends_only': 1, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
-                                        elif r("cf") or r("fc"): print(call_api('likes.getList', {'filter': 'copies', 'friends_only': 1, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
-                                        else: print(call_api('likes.getList', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}))
+                                        elif r("c"): like_list = get_long_list('likes.getList', {'filter': 'copies', 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}, INFINITY, L_OFFSET_CONSTANT)
+                                        elif r("f"): like_list = get_long_list('likes.getList', {'friends_only': 1, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}, INFINITY, LF_OFFSET_CONSTANT)
+                                        elif r("cf") or r("fc"): like_list = get_long_list('likes.getList', {'filter': 'copies', 'friends_only': 1, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}, INFINITY, LF_OFFSET_CONSTANT)
+                                        else: like_list = get_long_list('likes.getList', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}, INFINITY, L_OFFSET_CONSTANT)
+                                        if like_list is not None: print_id_list(like_list)
                                         continue
                                 elif r("d"):
                                         s = cin()
@@ -475,7 +487,7 @@ def messaging():
                                         dtype = None
                                         if r("?"):
                                                 print("[T\ntype]\nsearch string")
-                                                continue
+                                                return(0)
                                         elif r("t"):
                                                 s = cin()
                                                 if s is None: return(0)
@@ -501,7 +513,9 @@ def messaging():
                                 elif r("o"):
                                         s = cin()
                                         if s is None: return(0)
-                                        if r("?"): print('opens a file from a direct link. Or opens tokenfile, mnemofile, ignorefile, raspyafile - using T,M,I,R commands')
+                                        if r("?"):
+                                                print('opens a file from a direct link. Or opens tokenfile, mnemofile, ignorefile, raspyafile - using T,M,I,R commands')
+                                                return(0)
                                         elif r("t"): os.system(tokenfile)
                                         elif r("m"): os.system(mnemofile)
                                         elif r("i"): os.system(ignorefile)
@@ -577,6 +591,7 @@ def messaging():
                                         if s is None: return(0)
                                         if r("?"):
                                                 print('[HERE]\n[WGET][start num]\n[Number]\n[Author | ID]\n[Title | id/mnemonic]') if big_audio_flag else print('[HERE]\n[wget][start num]\n[Number]\n[Search string]')
+                                                return(0)
                                         if r("here"):
                                                 m3u_flag = False
                                                 s = cin()
@@ -669,9 +684,11 @@ def messaging():
                                         print('Now ' + printtime(time.time()))
                                         continue
                                 elif r("f"):
-                                        print("'' | > | < | F | number")
                                         s = cin()
                                         if s is None: return(0)
+                                        if r("?"):
+                                                print("Enter empty line for getting your friends list\n> - for list of your subscribers\n< - list of whom you are a subscriber of\nF - enter - userid or a mnemonic to get someone's friends of members of a group")
+                                                return(0)
                                         friend_id_list = None
                                         if s=='': friend_id_list = call_api('friends.getRecent', {'count': 1000})
                                         elif l(s)=='<' or l(s)==',': friend_id_list = call_api('friends.getRequests', {'count': 1000, 'out': 1})
@@ -682,15 +699,7 @@ def messaging():
                                                 t = mn(s)
                                                 if t<0: friend_id_list = call_api('groups.getMembers', {'group_id': -t, 'count': 1000, 'sort': 'time_desc'})
                                                 else: friend_id_list = call_api('friends.get', {'user_id': t, 'count': 1000})
-                                        if friend_id_list:
-                                                friend_list = call_api('users.get', {'user_ids': str(friend_id_list)[1:-1]})
-                                                if friend_list:
-                                                        for friend in friend_list:
-                                                                try:
-                                                                        print(friend.get('first_name'), friend.get('last_name'), friend.get('id'))
-                                                                        uidscache[friend.get('id')] = friend
-                                                                except KeyboardInterrupt: break
-                                                saveinstance()
+                                        if friend_id_list: print_id_list(friend_id_list)
                                         else:
                                                 suserid = mn(s)
                                                 if suserid<0: print(call_api('groups.join', {'group_id': -suserid}))
@@ -765,7 +774,7 @@ def messaging():
                                         if s is None: return(0)
                                         if r("?"):
                                                 print("Deleting messages (e.g. 5123,5124,5653)\nor a wall post (e.g. [https://vk.com/wall]-2424_2123).\Type anything instead 'Y' for the confirmation request and edit the wall post")
-                                                continue
+                                                return(0)
                                         dwall = s.find('_')+1
                                         if dwall:
                                                 wcrop = s.find('wall')
