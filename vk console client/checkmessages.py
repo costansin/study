@@ -21,7 +21,7 @@ def start():
                         delayed = []
         if os.path.isdir('smileys'): smileys = os.listdir('smileys')
 def call_api(method, params):
-        #print(method, params)
+        #print(method, params, token_num)
         #time.sleep(sleepTime)
         print('.', end='') if not looping else print(',', end='')
         if method[:7]=='http://':
@@ -178,7 +178,7 @@ def printms():
         printm = ''
 def printsn(s):
         global printm
-        printm += s + '\n' #print(s)
+        printm += '\n'+s #print(s)
 def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('%d %b %Y (%a) %H:%M:%S')+']')
 def name_from_id(uid):
         cachedid = getcached(uid)
@@ -190,7 +190,7 @@ def name_from_id(uid):
                 return name + '('+'-'*(uid<0)+str(cachedid.get('id', ''))+')'
         else: return '0'
 def iam():
-        if idscache: print(name_from_id(idscache[token_num])+' to '+name_from_id(prevuserid)+':')
+        if idscache: print('\n'+name_from_id(idscache[token_num])+' to '+name_from_id(prevuserid)+':')
 def photolink(photo):
         for size in photosizes:
                 link=photo.get('photo_'+str(size))
@@ -365,9 +365,11 @@ def messaging():
                                         print()
                                         return(0)
                                 elif r("p"):
-                                        print('Set probabilities of token_nums while checkbox')
+                                        print('Set probabilities of message check and notifies check fot every token_nums while checkbox')
                                         global prob
-                                        prob = [float(input()) for i in range(2*len(token_list))]
+                                        print(prob)
+                                        try: prob = [float(input()) for i in range(2*len(token_list))]
+                                        except: return(0)
                                         return(0)
                                 elif r("e"): #rasp.yandex.ru/search/suburban/? #https://rasp.yandex.ru/informers/search/?fromId=s0000000&amp;toId=s0000000&amp;
                                         for rasp in raspyadress:
@@ -917,8 +919,8 @@ def check_inbox():
                 myname = name_from_id(idscache[token_num])
                 viewed_time = lastNviewcache[token_num]
                 notif_resp, resp = None, None
-                if not looping or random.random() < prob[token_num*2-1]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
-                if not looping or random.random() < prob[token_num*2]: resp = call_api('messages.getDialogs', {'unread': '1'})
+                if random.random() < prob[token_num*2+1]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
+                if random.random() < prob[token_num*2]: resp = call_api('messages.getDialogs', {'unread': '1'})
                 if notif_resp:
                         r = notif_resp.get('count')
                         nitems = reversed(notif_resp.get('items'))
@@ -933,12 +935,11 @@ def check_inbox():
                         items = []
                 a=r+t
                 A+=a
-                printsn('\n' + myname + ' - ' + str(t) + ' new dialogues' + ' - ' + str(r) + ' new responses')
+                printsn(myname + ' - ' + str(t) + ' new dialogues' + ' - ' + str(r) + ' new responses')
+                if r<0: A-=r
                 if not looping:
                         if a: printms()
-                        else:
-                                printm=''
-                                print()
+                        else: printm='' #print()
                 for x in items:
                         N = x.get('unread')
                         mes = x.get('message')
