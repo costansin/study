@@ -84,15 +84,15 @@ def reset():
                 api_call = call_api('users.get', {})
                 if api_call:
                         me = api_call[0]
-                        idscache = idscache + [me]
+                        idscache = idscache + [me.get('id')]
                         uidscache[me.get('id')] = me
-                else: idscache = idscache + [{'last_name': str(token_num), 'first_name': 'token_num', 'id': 0}]
+                else: idscache = idscache + [0]
                 api_call = call_api('notifications.get',{'count': '0'})
                 if api_call: lastNviewcache = lastNviewcache + [api_call.get('last_viewed')]
                 else: lastNviewcache = lastNviewcache + [int(time.time())]
                 prob=prob+[1, 1]
         token_num = 0
-        prevuserid = idscache[token_num].get('id')
+        prevuserid = idscache[token_num]
         saveinstance()
         print()
         return 0
@@ -183,12 +183,14 @@ def printtime(date): return('['+datetime.datetime.fromtimestamp(date).strftime('
 def name_from_id(uid):
         cachedid = getcached(uid)
         if cachedid:
-                first_name = cachedid.get('first_name', '')
-                if first_name=='DELETED': first_name = ''
-                return first_name+' '+cachedid.get('last_name', '')+' ('+str(cachedid.get('id', ''))+')' if uid>=0 else cachedid.get('name', '')
+                name = cachedid.get('first_name', '') + ' '
+                if uid>=0: name += cachedid.get('last_name', '')+' '
+                else: name = cachedid.get('name', '')+' '
+                if name.strip()=='DELETED': name=''
+                return name + '('+'-'*(uid<0)+str(cachedid.get('id', ''))+')'
         else: return '0'
 def iam():
-        if idscache: print(idscache[token_num].get('first_name', ''), idscache[token_num].get('last_name', '')+' to '+name_from_id(prevuserid)+':')
+        if idscache: print(name_from_id(idscache[token_num])+' to '+name_from_id(prevuserid)+':')
 def photolink(photo):
         for size in photosizes:
                 link=photo.get('photo_'+str(size))
@@ -290,7 +292,7 @@ def messaging():
                                         n = int(s)
                                         if n<len(token_list):
                                                 token_num = n
-                                                prevuserid = idscache[n].get('id')
+                                                prevuserid = idscache[n]
                                         iam()
                                         continue												
                                 def r(c): return l(s)==c
@@ -413,7 +415,7 @@ def messaging():
                                                 wid = post.get('id')
                                                 wallcomments = get_long_list('wall.getComments', {'owner_id': wowner, 'post_id': wid, 'need_likes': 1},INFINITY,W_OFFSET_CONSTANT)
                                                 for comment in wallcomments:
-                                                        printsn('wall'+str(post.get('from_id'))+'_'+str(comment.get('id'))+'\nid'+str(comment.get('from_id'))+'\n\n'+charfilter(comment.get('text')))
+                                                        printsn('wall'+str(post.get('from_id'))+'_'+str(comment.get('id'))+'\n'+name_from_id(int(comment.get('from_id')))+'\n\n'+charfilter(comment.get('text')))
                                                         print_attachments(comment.get('attachments', []))
                                                         printsn('\n'+str(comment.get('likes').get('count'))+' likes')
                                                         printsn('____')
@@ -494,7 +496,7 @@ def messaging():
                                                 dtype = s.lower()
                                                 s = cin()
                                                 if s is None: return(0)
-                                        docdata = {'act': 'search_docs', 'al': '1', 'offset': '0', 'oid': idscache[token_num].get('id'), 'q': s}
+                                        docdata = {'act': 'search_docs', 'al': '1', 'offset': '0', 'oid': idscache[token_num], 'q': s}
                                         if not header:
                                                 print("Please open your browser, open vk.com/docs, Ctrl+Shift+J, click Network tab, search something in docs search field, choose a request for docs.php, copy all Request Headers (it's Accept:*/*, Accept-Encoding:gzip, deflate, etc.), and paste here.")
                                                 h = ''
@@ -626,7 +628,7 @@ def messaging():
                                         audioget = s=='id' 
                                         if not s:
                                                 audioget = True
-                                                t = idscache[token_num].get('id')
+                                                t = idscache[token_num]
                                         elif audioget: t = mn(autitle)
                                         if audioget: big_audio_flag = False
                                         if audioget: audio_list = get_long_list('audio.get', {'owner_id': t}, au_count, AU_OFFSET_CONSTANT)
@@ -773,7 +775,7 @@ def messaging():
                                         if huid is None: return(0)
                                         huid = mn(huid)
                                         getHistory(INFINITY, True, huid)
-                                        with open('history_' + str(idscache[token_num].get('id')) + '_to_' + name_from_id(huid) + '.txt', 'w', encoding='utf-8') as f: f.write(printm)
+                                        with open('history_' + str(idscache[token_num]) + '_to_' + name_from_id(huid) + '.txt', 'w', encoding='utf-8') as f: f.write(printm)
                                         printm=''
                                         print()
                                         continue
@@ -883,7 +885,7 @@ def messaging():
                                         print("resend it to youself, yeah? hah")
                                         confirmation = cin()
                                         if confirmation is None: return(0)
-                                        userid = idscache[token_num].get('id')
+                                        userid = idscache[token_num]
                         getHistory(10, False, userid)
                         if not printm:
                                 print('The history is empty!\nall is well?')
@@ -910,7 +912,7 @@ def check_inbox():
         index = 0
         prev_token_num = token_num
         for token_num in range(len(token_list)): #if random.random() > prob[token_num]: continue
-                myname = idscache[token_num]
+                myname = name_from_id(idscache[token_num])
                 viewed_time = lastNviewcache[token_num]
                 notif_resp, resp = None, None
                 if not looping or random.random() < prob[token_num*2-1]: notif_resp = call_api('notifications.get',{'start_time': viewed_time})
@@ -929,7 +931,7 @@ def check_inbox():
                         items = []
                 a=r+t
                 A+=a
-                printsn('\n'+myname.get('first_name')+' '+myname.get('last_name')+' - '+str(t)+' new dialogues'+' - '+str(r)+' new responses')
+                printsn('\n' + myname + ' - ' + str(t) + ' new dialogues' + ' - ' + str(r) + ' new responses')
                 if not looping:
                         if a: printms()
                         else:
@@ -1002,6 +1004,7 @@ def main():
                                                         time.sleep(1)
                                         except KeyboardInterrupt:
                                                 print()
+                                                printm=''
                                                 break
                                         printm=''
                                 else:
