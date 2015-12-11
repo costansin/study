@@ -1009,7 +1009,6 @@ def main():
                                                 for timer in range(waitTime):
                                                         time.sleep(1)
                                         except KeyboardInterrupt:
-                                                print()
                                                 printm=''
                                                 break
                                         printm=''
