@@ -506,6 +506,9 @@ def messaging():
                                                 read_header()
                                         r = requests.request(method="POST", url="http://vk.com/docs.php", headers=header, data=docdata) #docheader["Referer"] = "http://vk.com/docs"
                                         v = r.text[r.text.find('[['):r.text.rfind(']]')+2]
+                                        if not v:
+                                                print('Something gone wrong, try update headers')
+                                                return(0)
                                         lit = ast.literal_eval(v)
                                         if dtype: lit = [doc for doc in lit if doc[1]==dtype]
                                         for doc in lit: print(doc[2], 'doc'+str(doc[4])+'_'+str(doc[0])) #doc[3] - size and date
@@ -539,7 +542,12 @@ def messaging():
                                 elif r("x"):
                                         s = cin() #get the video from a "player"-link or "player"-link from video id
                                         if s is None: return(0)
-                                        if s.startswith('photo'):
+                                        if s.startswith('doc'):
+                                                r = requests.get('http://vk.com/'+s)
+                                                if not r: return(0)
+                                                t = r.text
+                                                print(t[t.find('src="')+5:t.find('" w')])
+                                        elif s.startswith('photo'):
                                                 api_call = call_api('photos.getById', {'photos': s[5:]})
                                                 if api_call: print(photolink(api_call[0]))
                                                 continue
