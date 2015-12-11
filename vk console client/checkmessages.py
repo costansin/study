@@ -34,7 +34,7 @@ def call_api(method, params):
                         params[v[0]]=v[1]
         else:
                 params['access_token'] = token_list[token_num]
-                params['v'] = "5.40"
+                params['v'] = '5.40'
                 url = 'https://api.vk.com/method/' + method
                 files = None
         E = False
@@ -235,7 +235,7 @@ def getHistory(count, print_numbers, uid):
         if not isinstance(uid, int): uid = mn(uid)
         chat = uid>=2000000000
         unread = False
-        history = get_long_list('messages.getHistory', {'user_id': uid}, count, HI_OFFSET_CONSTANT)
+        history = get_long_list('messages.getHistory', {'peer_id': uid}, count, HI_OFFSET_CONSTANT)
         inoutchar = ''
         if not history: return
         for message in reversed(history):
@@ -873,10 +873,6 @@ def messaging():
                         getHistory((resh.endpos-2)*200, True, userid)
                         printms()
                 else:
-                        if userid>=2000000000:
-                                meth = 'chat_id'
-                                userid = userid-2000000000
-                        else: meth = 'user_id'
                         out_flag = l(m[-1])=='#'
                         if out_flag: m=m[:-1]
                         print(len(m))
@@ -903,7 +899,7 @@ def messaging():
                                 if lastn==-1: lastn=4095
                                 call_api('messages.send', {meth: userid, 'message': m[:lastn], 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                                 m = m[lastn:]
-                        call_api('messages.send', {meth: userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
+                        call_api('messages.send', {'peer_id': userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                         print(printm+m+'\n'+printtime(time.time()))
                         printm = ''
                         if out_flag: return(-1)
