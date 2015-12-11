@@ -203,12 +203,12 @@ def print_attachments(attache):
                 if cropf>=0: croptype = atype[:cropf]
                 else: croptype = atype
                 stuff = attached.get(atype)
-                owner = stuff.get('owner_id', '')
-                if owner is None: owner = stuff.get('to_id', '')
+                owner = stuff.get('owner_id')
+                if owner is None: owner = stuff.get('to_id')
                 if owner is None:
-                        try: owner = -stuff.get('group_id', '')
+                        try: owner = -stuff.get('group_id')
                         except: owner = None
-                cropadress = str(owner)+'_'+str(stuff.get('id', ''))
+                cropadress = str(owner)+'_'+str(stuff.get('id'))
                 adress = croptype + cropadress
                 if (atype=='photo')or(atype=='sticker'): printsn(photolink(stuff))
                 elif atype=='video': adress = adress + '_' + str(stuff.get('access_key', '')) #call_api('video.get', {'videos': req})# api_call.get('items')[0].get('player'))
@@ -275,13 +275,16 @@ def showprintm():
         w = Message(master, text=printm)
         w.pack()
         master.mainloop()
+def check_delayed():
+        while delayed and time.time() > delayed[0][0]: block.extend(delayed.pop(0)[1])
+        if block:
+                with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
+        return (len(block))
 def messaging():
         global token_num, printm, waitTime, prevuserid, block
         iam()
-        m, s, attachments, forward_messages, userid, wall_flag, wall_edit_flag, subject, now = '', '', '', '', None, False, False, None, time.time()
-        while delayed and now > delayed[0][0]: block.extend(delayed.pop(0)[1])
-        if block:
-                with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
+        m, s, attachments, forward_messages, userid, wall_flag, wall_edit_flag, subject = '', '', '', '', None, False, False, None
+        check_delayed()
         while (s=='')or(l(s[-1])!='#'):
                 s = cin()
                 if s is None: return(0)
@@ -293,8 +296,7 @@ def messaging():
                                         if n<len(token_list):
                                                 token_num = n
                                                 prevuserid = idscache[n]
-                                        iam()
-                                        continue												
+                                        return(0)
                                 def r(c): return l(s)==c
                                 if r("{"):
                                         s = cin()
@@ -321,9 +323,9 @@ def messaging():
                                                 bisect.insort(delayed, (delay_time, block))
                                                 with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
                                                 block = []
-                                        continue
+                                        return(0)
                                 elif r("?"):
-                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit) (? for help)\nz - latinize the layout\ng - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
+                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit) (? for help)\nz - latinize the layout\ny - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
                                         return(0)
                                 elif r("'"): return(-1)
                                 elif r("+"):
@@ -355,18 +357,18 @@ def messaging():
                                         if s is None: return(0)
                                         try: waitTime = int(s)
                                         except: return(0)
-                                        continue
+                                        return(0)
                                 elif r("n"):
                                         call_api('notifications.markAsViewed', {})
                                         lastNviewcache[token_num] = int(time.time())
                                         saveinstance()
                                         print()
-                                        continue
+                                        return(0)
                                 elif r("p"):
                                         print('Set probabilities of token_nums while checkbox')
                                         global prob
                                         prob = [float(input()) for i in range(2*len(token_list))]
-                                        continue
+                                        return(0)
                                 elif r("e"): #rasp.yandex.ru/search/suburban/? #https://rasp.yandex.ru/informers/search/?fromId=s0000000&amp;toId=s0000000&amp;
                                         for rasp in raspyadress:
                                                 r = requests.get(rasp)
@@ -377,7 +379,7 @@ def messaging():
                                                 stations = [st[st.find('>')+1:st.find('<')].replace('\xa0',' ') for st in re.findall(r'overflow-inner.*?div',x)]
                                                 l3 = list(map(lambda z, x, y: x+' - '+y+' - '+z, stations[::], l2[::2], l2[1::2]))
                                                 for r in l3: print(r)
-                                        continue
+                                        return(0)
                                 elif r("w"):
                                         s = cin()
                                         if s is None: return(0)
@@ -420,14 +422,14 @@ def messaging():
                                                         printsn('\n'+str(comment.get('likes').get('count'))+' likes')
                                                         printsn('____')
                                         printms()
-                                        continue
+                                        return(0)
                                 elif r(":"):
                                         s = cin()
                                         if s is None: return(0)
                                         if s.find('http')!=0: s='http://'+s
                                         x = requests.get(s)
                                         print(x.text)
-                                        continue
+                                        return(0)
                                 elif r("s"):
                                         s = cin()
                                         if s is None: return(0)
@@ -435,7 +437,7 @@ def messaging():
                                         for s in y:
                                                 if s in rev_simple_smileys:
                                                         os.system('smileys\\'+rev_simple_smileys[s])
-                                                        continue
+                                                        return(0)
                                                 try: c = int(s)
                                                 except:
                                                         while (s!='')and not (s[0].isdigit()): s=s[1:]
@@ -448,7 +450,7 @@ def messaging():
                                                 if h72 in smileys: os.system('smileys\\'+h72)
                                                 elif h60 in smileys: os.system('smileys\\'+h60)
                                                 elif h0 in smileys: os.system('smileys\\'+h0)
-                                        continue
+                                        return(0)
                                 elif r("t"):
                                         s = cin()
                                         if s is None: return(0)
@@ -458,7 +460,7 @@ def messaging():
                                         lit = ast.literal_eval(s)
                                         g = call_api(*lit)
                                         print(charfilter(str(g)))
-                                        continue
+                                        return(0)
                                 elif r("l"):
                                         print('syntax: type owner_id (e.g. audio 26522309_422813886 or post -69528510_158)\ntypes: post, comment, photo, audio, video, note, photo_comment, video_comment, topic_comment, sitepage')
                                         s = cin()
@@ -482,7 +484,7 @@ def messaging():
                                         elif r("cf") or r("fc"): like_list = get_long_list('likes.getList', {'filter': 'copies', 'friends_only': 1, 'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}, INFINITY, LF_OFFSET_CONSTANT)
                                         else: like_list = get_long_list('likes.getList', {'type': lobjecttype, 'owner_id': lowner, 'item_id': lid}, INFINITY, L_OFFSET_CONSTANT)
                                         if like_list is not None: print_id_list(like_list)
-                                        continue
+                                        return(0)
                                 elif r("d"):
                                         s = cin()
                                         if s is None: return(0)
@@ -514,7 +516,7 @@ def messaging():
                                         lit = ast.literal_eval(v)
                                         if dtype: lit = [doc for doc in lit if doc[1]==dtype]
                                         for doc in lit: print(doc[2], 'doc'+str(doc[4])+'_'+str(doc[0])) #doc[3] - size and date
-                                        continue
+                                        return(0)
                                 elif r("o"):
                                         s = cin()
                                         if s is None: return(0)
@@ -530,9 +532,9 @@ def messaging():
                                                 with open(ofname, 'wb') as f:
                                                         f.write(requests.get(s).content)
                                                 os.system(ofname)
-                                                continue
+                                                return(0)
                                         start()
-                                        continue
+                                        return(0)
                                 elif r("v"):
                                         vhd = int(s.isupper())
                                         s = cin()
@@ -540,7 +542,7 @@ def messaging():
                                         v = call_api('video.search', {'q':s, 'sort': 2, 'hd': vhd, 'filters': 'long'*vhd, 'adult': '1'})
                                         if v is None: return(0)
                                         for vid in v.get('items'): print('video'+str(vid.get('owner_id'))+'_'+str(vid.get('id')), vid.get('title'), sep='\t') #print(vid.get('player')))
-                                        continue
+                                        return(0)
                                 elif r("x"):
                                         s = cin() #get the video from a "player"-link or "player"-link from video id
                                         if s is None: return(0)
@@ -552,7 +554,7 @@ def messaging():
                                         elif s.startswith('photo'):
                                                 api_call = call_api('photos.getById', {'photos': s[5:]})
                                                 if api_call: print(photolink(api_call[0]))
-                                                continue
+                                                return(0)
                                         elif s.startswith('audio'):
                                                 owner, aid = s[5:].split('_')
                                                 api_call = call_api('audio.get', {'owner_id': owner, 'audio_ids': aid})
@@ -561,7 +563,7 @@ def messaging():
                                                 if not auresplist: return(0)
                                                 aur = auresplist[0]
                                                 for x in aur: print(x, aur[x], sep='\t\t')
-                                                continue
+                                                return(0)
                                         elif s.startswith('video'):
                                                 s = s[s.find('video')+5:]
                                                 api_call = call_api('video.get', {'videos': s})
@@ -574,12 +576,12 @@ def messaging():
                                                                 print(s)
                                         else:
                                                 print("photo123123_123123 or audio1231231_12213 or video2123_123123 or http://vk.com/video_ext.php?oid=...")
-                                                continue
-                                        if not (s.find('video_ext')+1): continue
+                                                return(0)
+                                        if not (s.find('video_ext')+1): return(0)
                                         x = requests.get(s).text
                                         if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')+1:
                                                 print('Adult content error')
-                                                continue
+                                                return(0)
                                         xd = x.find('video_max_hd = ')
                                         try: video_max_hd = int(x[xd+16:xd+17])
                                         except: video_max_hd = 0
@@ -587,12 +589,12 @@ def messaging():
                                         video_url = x[x.find('url'+hds[video_max_hd])+7:]
                                         video_url = video_url[:video_url.find('&amp;')]
                                         print(video_url)                        
-                                        continue
+                                        return(0)
                                 elif r("a"):
                                         if attachments:
                                                 add_owner_id, add_audio_id = attachments.split('_')
                                                 print(call_api('audio.add', {'owner_id': int(add_owner_id[6:]), 'audio_id': int(add_audio_id)}))
-                                                continue
+                                                return(0)
                                         big_audio_flag = s.isupper()
                                         m3u_flag = True
                                         wget_flag = False
@@ -671,7 +673,7 @@ def messaging():
                                                                 url = audio.get('url')
                                                                 if not big_audio_flag or (autitle==''): print(au(audio))
                                                                 print(url[:url.find('?extra')], au_adress(audio))
-                                        continue
+                                        return(0)
                                 elif r("u"):
                                         s = cin()
                                         if s is None: return(0)
@@ -692,7 +694,7 @@ def messaging():
                                                 info = call_api('utils.resolveScreenName', {'screen_name': suserid})
                                                 if info: print(info.get('type'), info.get('object_id'))
                                         print('Now ' + printtime(time.time()))
-                                        continue
+                                        return(0)
                                 elif r("f"):
                                         s = cin()
                                         if s is None: return(0)
@@ -714,7 +716,7 @@ def messaging():
                                                 suserid = mn(s)
                                                 if suserid<0: print(call_api('groups.join', {'group_id': -suserid}))
                                                 else: print(call_api('friends.add', {'user_id': suserid})) #domain unavailable
-                                        continue
+                                        return(0)
                                 elif r("b"): #makes you online!
                                         wall_flag = True
                                         userid = 0
@@ -730,7 +732,7 @@ def messaging():
                                                 for mes in resmes:
                                                         rm = mes.get('message')
                                                         print(rm.get('user_id'), mes.get('unread'), '#'+charfilter(rm.get('body')))
-                                        continue
+                                        return(0)
                                 elif r("i"):
                                         print(ignore)
                                         print("Now add something to ignore list or temporarily remove something from it (to cancel - CTRL+C).")
@@ -749,7 +751,7 @@ def messaging():
                                                 else:
                                                         print('ignore file was deleted!')
                                                         with open(ignorefile, 'w') as f: f.write('\n'+s)
-                                        continue
+                                        return(0)
                                 elif r("m"):
                                         print(mnemonics)
                                         print("Now add something to mnemo list (to cancel - CTRL+C).")
@@ -768,7 +770,7 @@ def messaging():
                                         else:
                                                 print('mnemo file was deleted!')
                                                 with open(mnemofile, 'w') as f: f.write('\n'+s+' '+muserids)
-                                        continue
+                                        return(0)
                                 elif r("h"):
                                         print("saving history to file. if you need HELP - type '?'")
                                         huid = cin()
@@ -778,7 +780,7 @@ def messaging():
                                         with open('history_' + str(idscache[token_num]) + '_to_' + name_from_id(huid) + '.txt', 'w', encoding='utf-8') as f: f.write(printm)
                                         printm=''
                                         print()
-                                        continue
+                                        return(0)
                                 elif r("-"):
                                         s = cin()
                                         if s is None: return(0)
@@ -816,13 +818,13 @@ def messaging():
                                                 print('Edit post:')
                                                 s = ''
                                                 wall_edit_flag = True
-                                        continue
+                                        return(0)
                                 elif r("z"):
                                         s = cin()
                                         if s is None: return(0)
                                         print(l(s))
-                                        continue
-                                elif r("g"):
+                                        return(0)
+                                elif r("y"):
                                         site = 'https://yandex.ru/internet' #'http://jsonip.com' ip = r.json()['ip']
                                         r = requests.get(site)
                                         r.encoding = 'UTF-8'
@@ -831,7 +833,7 @@ def messaging():
                                         inf = x[p:p+200] #if region is not None: print(region[0][:-12].replace('</div><span class="data__item-content">',' '))
                                         inf = inf.replace('strong','').replace('/', '').replace('<>', '')
                                         print(inf[:inf.find('Браузер')])
-                                        continue
+                                        return(0)
                                 elif r("q"):
                                         saveinstance()
                                         return(-3)
@@ -999,6 +1001,9 @@ def main():
                                 looping = True
                                 while (check_inbox()==0):
                                         print('-', end='')
+                                        if check_delayed():
+                                                print()
+                                                messaging()
                                         try:
                                                 for timer in range(waitTime):
                                                         time.sleep(1)
