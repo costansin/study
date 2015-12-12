@@ -1006,8 +1006,8 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument('-L', action='store_true', required=False)
         args = parser.parse_args()
-        looping = vars(args).get('L')
-        mes = -int(looping)
+        glooping = vars(args).get('L')
+        mes = -int(glooping)
         while True:
                 if mes<0:
                         if mes==-2: check_inbox()
@@ -1030,5 +1030,5 @@ def main():
                                         printms()
                                 looping = False
                         elif mes==-3: return
-                mes=messaging()
+                if not glooping: mes=messaging()
 if __name__ == '__main__': main()
