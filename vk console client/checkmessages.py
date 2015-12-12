@@ -1,5 +1,5 @@
 # -*- coding: utf-8
-import requests, time, datetime, ast, os, re, random, bisect
+import requests, time, datetime, ast, os, re, random, bisect, argparse
 from tkinter import *
 sleepTime, waitTime = 0.34, 53
 INFINITY, AU_OFFSET_CONSTANT, HI_OFFSET_CONSTANT, W_OFFSET_CONSTANT, L_OFFSET_CONSTANT, LF_OFFSET_CONSTANT, mnemofile, ignorefile, tokenfile, raspyafile, cachefile, headerfile, delayfile, looping, photosizes, printm, width, height, mnemonics, ignore, header, idscache, uidscache, lastNviewcache, prob, token_num, block, delayed, full_auth_line = 10000000, 300, 200, 100, 1000, 100, 'mnemo.txt', 'ignore.txt', 'tokens.txt', 'rasp.ya.txt', 'cache.txt', 'header.txt', 'delay.txt', False, [2560, 1280, 807, 604, 512, 352, 256, 130, 128, 100, 75, 64], '', 0, 0, {}, [], {}, [], {}, [], [], 0, [], [], 'https://oauth.vk.com/authorize?client_id=5015702&scope=notify,friends,photos,audio,video,docs,notes,pages,status,offers,questions,wall,groups,messages,notifications,stats,ads,offline&redirect_uri=https://oauth.vk.com/blank.html&display=page&response_type=token'
@@ -130,6 +130,7 @@ def get_long_list(method, params, l_count, OFFSET_CONSTANT):
 def cin():
         if block: return block.pop(0)
         else:
+                if looping: exit()
                 try: return(input())
                 except KeyboardInterrupt: exit
 def read_header():
@@ -325,7 +326,7 @@ def messaging():
                                                 block = []
                                         return(0)
                                 elif r("?"):
-                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit) (? for help)\nz - latinize the layout\ny - user IP and location\n{ - start a block; } - end the block\n? - this help info\nq - quit")
+                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit) (? for help)\nz - latinize the layout\ny - user IP and location\ng - google something\n{ - start a block; } - end the block\n? - this help info\nq - quit")
                                         return(0)
                                 elif r("'"): return(-1)
                                 elif r("+"):
@@ -816,11 +817,12 @@ def messaging():
                                         if delete_confirmation is None: return(0)
                                         if l(delete_confirmation)=='y':
                                                 print(call_api('wall.delete', {'owner_id': wowner, 'post_id': wid}) if dwall else call_api('messages.delete', {'message_ids': s}))
+                                                return(0)
                                         elif dwall:
                                                 print('Edit post:')
                                                 s = ''
                                                 wall_edit_flag = True
-                                        return(0)
+                                        continue
                                 elif r("z"):
                                         s = cin()
                                         if s is None: return(0)
@@ -835,6 +837,13 @@ def messaging():
                                         inf = x[p:p+200] #if region is not None: print(region[0][:-12].replace('</div><span class="data__item-content">',' '))
                                         inf = inf.replace('strong','').replace('/', '').replace('<>', '')
                                         print(inf[:inf.find('Браузер')])
+                                        return(0)
+                                elif r("g"):
+                                        s = cin()
+                                        if s is None: return(0)
+                                        gooreq = requests.get("http://www.google.ru/search?q="+s)#, data={'q':s})
+                                        goolist = [x[x.find('?q=')+3:x.find('&amp')]+'\n'+x[x.find('_blank">')+8:x.rfind('</a>')]+'\n' for x in re.findall('"r".*?h3', gooreq.text)]
+                                        for link in goolist: print(link.replace('%25', '%'))
                                         return(0)
                                 elif r("q"):
                                         saveinstance()
@@ -994,8 +1003,12 @@ def check_inbox():
 def main():
         global printm, waitTime, looping
         start(), read_mnemonics(), read_ignore(), read_header(), getcache()
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-L', action='store_true', required=False)
+        args = parser.parse_args()
+        looping = vars(args).get('L')
+        mes = -int(looping)
         while True:
-                mes=messaging()
                 if mes<0:
                         if mes==-2: check_inbox()
                         elif mes==-1:
@@ -1017,4 +1030,5 @@ def main():
                                         printms()
                                 looping = False
                         elif mes==-3: return
+                mes=messaging()
 if __name__ == '__main__': main()
