@@ -281,10 +281,15 @@ def check_delayed():
         if block:
                 with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
         return (len(block))
+def add_delayed(delay_time):
+        global delayed, block
+        bisect.insort(delayed, (delay_time, block))
+        with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
+        block = [] 
 def messaging():
         global token_num, printm, waitTime, prevuserid, block
         iam()
-        m, s, attachments, forward_messages, userid, wall_flag, wall_edit_flag, subject = '', '', '', '', None, False, False, None
+        m, s, attachments, forward_messages, userid, wall_flag, wall_edit_flag, subject, delay_time = '', '', '', '', None, False, False, None, None
         check_delayed()
         while (s=='')or(l(s[-1])!='#'):
                 s = cin()
@@ -297,36 +302,53 @@ def messaging():
                                         if n<len(token_list):
                                                 token_num = n
                                                 prevuserid = idscache[n]
+                                                saveinstance()
                                         return(0)
                                 def r(c): return l(s)==c
-                                if r("{"):
+                                if r(">") or r("<"):
+                                        repeated = r("<")
+                                        nowstamp = datetime.datetime.fromtimestamp(time.time())
                                         s = cin()
                                         if s is None: return(0)
                                         if r("?"):
-                                                print("{\n[DELAY\ntime]\ncommand1\ncommand2\n...\n}")
+                                                print('input a period of time in seconds (can be float)' if repeated else nowstamp.strftime('input time in format 18:00:00 %d.%m.%Y'))
                                                 return(0)
-                                        elif r("delay"):
-                                                nowstamp = datetime.datetime.fromtimestamp(time.time())
-                                                print(nowstamp.strftime('input time in format 18:00:00 %d.%m.%Y'))
-                                                s = cin()
-                                                if s is None: return(0)
-                                                delay_time = time.mktime(datetime.datetime.strptime(s, "%H:%M:%S %d.%m.%Y").timetuple())
-                                                s = cin()
-                                                if s is None: return(0)
-                                        else: delay_time = None
-                                        while s!='}':
+                                        if repeated:
+                                                delay_period = float(s)
+                                                delay_time = time.time()+delay_period
+                                        else: delay_time = time.mktime(datetime.datetime.strptime(s, "%H:%M:%S %d.%m.%Y").timetuple())
+                                        s = cin()
+                                        if s is None: return(0)
+                                        if not r("{"):
                                                 block.append(s)
-                                                try: s = input()
-                                                except KeyboardInterrupt:
-                                                        block = []
+                                                if repeated: block.extend(['<', str(delay_period), s])
+                                                add_delayed(delay_time)
+                                                return(0)
+                                if r("{"):
+                                        bracket_counter = 1
+                                        s = cin()
+                                        if s is None: return(0)
+                                        if r("?"):
+                                                print("command1\ncommand2\n...\n}")
+                                                return(0)
+                                        temp_block = []
+                                        while True:
+                                                bracket_counter += int(r("{")) - int(r("}"))
+                                                if not bracket_counter:
+                                                        if repeated:
+                                                                block.extend(temp_block + ['<', str(delay_period), '{'])
+                                                                temp_block.append('}') #block += [temp, <, delay_period, {, temp, }]
                                                         break
-                                        if delay_time is not None:
-                                                bisect.insort(delayed, (delay_time, block))
-                                                with open(delayfile, 'w') as delay_file: delay_file.write(str(delayed))
-                                                block = []
+                                                temp_block.append(s)
+                                                s = cin() #try: s = input()
+                                                if s is None: #except KeyboardInterrupt:
+                                                        temp_block = []
+                                                        break
+                                        block.extend(temp_block)
+                                        if delay_time is not None: add_delayed(delay_time)
                                         return(0)
                                 elif r("?"):
-                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit) (? for help)\nz - latinize the layout\ny - user IP and location\ng - google something\n{ - start a block; } - end the block\n? - this help info\nq - quit")
+                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit, or restore) (? for help)\nz - latinize the layout\ny - user IP and location\ng - google something\n> - delayed execution of a block of commands\n< - repeated execution\n{ - start a block of commands; (? for help) } - end the block\n? - this help info\nq - quit")
                                         return(0)
                                 elif r("'"): return(-1)
                                 elif r("+"):
@@ -411,7 +433,8 @@ def messaging():
                                                                 printsn('\t[REPOSTED]\n\t'+charfilter(reposts.get('text')))
                                                                 print_attachments(reposts.get('attachments', []))
                                                 print_attachments(post.get('attachments', []))
-                                                printsn('\n'+str(post.get('likes').get('count'))+' likes, '+str(post.get('comments').get('count'))+' comments')
+                                                if post.get('post_type')!='suggest': printsn('\n'+str(post.get('likes').get('count'))+' likes, '+str(post.get('comments').get('count'))+' comments')
+                                                else: printsn('\nSUGGEST')
                                                 printsn('____')
                                         if len(wall)==1:
                                                 printsn('COMMENTS:')
@@ -511,7 +534,7 @@ def messaging():
                                                         h += s+'\n'
                                                 with open(headerfile, 'w') as header_file: header_file.write(h)
                                                 read_header()
-                                        r = requests.request(method="POST", url="http://vk.com/docs.php", headers=header, data=docdata) #docheader["Referer"] = "http://vk.com/docs"
+                                        r = requests.request(method="POST", url="https://vk.com/docs.php", headers=header, data=docdata) #docheader["Referer"] = "https://vk.com/docs"
                                         v = r.text[r.text.find('[['):r.text.rfind(']]')+2]
                                         if not v:
                                                 print('Something gone wrong, try update headers')
@@ -550,7 +573,7 @@ def messaging():
                                         s = cin() #get the video from a "player"-link or "player"-link from video id
                                         if s is None: return(0)
                                         if s.startswith('doc'):
-                                                r = requests.get('http://vk.com/'+s)
+                                                r = requests.get('https://vk.com/'+s)
                                                 if not r: return(0)
                                                 t = r.text
                                                 print(t[t.find('src="')+5:t.find('" w')])
@@ -797,7 +820,10 @@ def messaging():
                                                 print(s)
                                                 wowner, wid = s.split('_')
                                                 wall = call_api('wall.getById',{'posts':s})
-                                                if not wall: return[0]
+                                                if not wall:
+                                                        print('not found, trying to restore')
+                                                        print(call_api('wall.restore', {'owner_id': wowner, 'post_id': wid}))
+                                                        return(0)
                                                 post = wall[0]
                                                 printsn('\n'+charfilter(post.get('text')))              
                                                 print_attachments(post.get('attachments', []))
@@ -841,7 +867,7 @@ def messaging():
                                 elif r("g"):
                                         s = cin()
                                         if s is None: return(0)
-                                        gooreq = requests.get("http://www.google.ru/search?q="+s)#, data={'q':s})
+                                        gooreq = requests.get("https://www.google.ru/search?q="+s)#, data={'q':s})
                                         goolist = [x[x.find('?q=')+3:x.find('&amp')]+'\n'+x[x.find('_blank">')+8:x.rfind('</a>')]+'\n' for x in re.findall('"r".*?h3', gooreq.text)]
                                         for link in goolist: print(link.replace('%25', '%'))
                                         return(0)
@@ -863,6 +889,7 @@ def messaging():
                 if m=='\n':
                         break
         prevuserid = userid
+        saveinstance()
         m=m[:-1]
         if wall_edit_flag:
                 print(call_api('wall.edit', {'owner_id': wowner, 'post_id': wid, 'message': m, 'attachments': attachments}))
@@ -912,7 +939,7 @@ def messaging():
                         while len(m)>4096:
                                 lastn = m[:4096].rfind('\n')
                                 if lastn==-1: lastn=4095
-                                call_api('messages.send', {meth: userid, 'message': m[:lastn], 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
+                                call_api('messages.send', {'peer_id': userid, 'message': m[:lastn], 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                                 m = m[lastn:]
                         call_api('messages.send', {'peer_id': userid, 'message': m, 'attachment': attachments, 'forward_messages': forward_messages, 'title': subject})
                         print(printm+m+'\n'+printtime(time.time()))
@@ -1003,7 +1030,7 @@ def check_inbox():
         token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
-        global printm, waitTime, looping
+        global printm, waitTime, looping, lastNviewcache
         start(), read_mnemonics(), read_ignore(), read_header(), getcache()
         parser = argparse.ArgumentParser()
         parser.add_argument('-L', action='store_true', required=False)
@@ -1030,6 +1057,7 @@ def main():
                                 else:
                                         showprintm()
                                         printms()
+                                        if glooping: lastNviewcache = [int(time.time())] * len(token_list)
                                 looping = False
                         elif mes==-3: return
                 if not glooping: mes=messaging()
