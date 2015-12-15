@@ -49,8 +49,8 @@ def call_api(method, params):
                                 err = result.get('error')
                                 msg = err.get('error_msg')
                                 print(msg)
-                                if msg.find('Validation')+1: print(err.get('redirect_uri'))
-                                if msg.find('authorization')+1: print(full_auth_line)
+                                if 'Validation' in msg: print(err.get('redirect_uri'))
+                                if 'authorization' in msg: print(full_auth_line)
                                 return
                 except:
                         if not E:
@@ -348,14 +348,14 @@ def messaging():
                                         if delay_time is not None: add_delayed(delay_time)
                                         return(0)
                                 elif r("?"):
-                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ' - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - like something\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to audio/video (x of video2982_242 is a player-link, x of a player-link is its raw video file)\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit, or restore) (? for help)\nz - latinize the layout\ny - user IP and location\ng - google something\n> - delayed execution of a block of commands\n< - repeated execution\n{ - start a block of commands; (? for help) } - end the block\n? - this help info\nq - quit")
+                                        print("all the commands are layout-insensitive and almost all are case-insensitive\n' - wait mode\n+ - attach (? for help)\n~ or ` - waittime for wait mode\nn - mark notifications as read\no - open a file from a direct link (see help there using ?-command)\np - set probabilities of checking (2N numbers in columnar form)\ne - rasp.ya.ru from the file with informer-links\nw - see wall or wall post\n: - any site in Internet in raw\ns - see smiley image from its number or :-] - form\nt - input raw api call\nl - likes\nv - find a video; V - find an hd-video\na - find an audio; A - find an audio of exact author, title or id. ? for help\nd - find a doc (? for help)\nx - raw link to photo/audio(linked to IP)/video/doc\nu - user/group info\nf - friend someone/join a group/see friends of\nb - posts to your wall - warning: makes you online!\nr - reset cache\n. - quick check\ni - see ignore list and add something to it\nm - see mnemolist and add something to it\nh - saving history to file\n- - delete messages or a wall post (or edit, or restore) (? for help)\nz - latinize the layout\ny - user IP and location\ng - google something\n> - delayed execution of a block of commands\n< - repeated execution\n{ - start a block of commands; (? for help) } - end the block\n? - this help info\nq - quit")
                                         return(0)
                                 elif r("'"): return(-1)
                                 elif r("+"):
                                         s = cin()
                                         if s is None: return(0)
                                         if r("?"):
-                                                print('forward messages ids (e.g. 1232,1233,1237) |\nattachments (e.g. photo123123_123223,audio-34232_23123) |\ns Subject of the message |\nu - upload photo to message (input file adress or nothing to upload Безымянный.png) |\nw - upload photo to wallpost (same here)')
+                                                print('forward messages ids (e.g. 1232,1233,1237) |\nattachments (e.g. photo123123_123223,audio-34232_23123) |\ns Subject of the message |\nu - upload photo to a message (input file adress or nothing for Безымянный.png) |\nw - upload photo to a wallpost (same here)')
                                                 return(0)
                                         if r("u"): uploades = ['photos.getMessagesUploadServer', 'photos.saveMessagesPhoto']
                                         elif r("w"): uploades = ['photos.getWallUploadServer', 'photos.saveWallPhoto']
@@ -426,7 +426,8 @@ def messaging():
                                                 else: return(0)
                                         printm='\n'
                                         for post in wall:
-                                                printsn('wall'+str(post.get('from_id'))+'_'+str(post.get('id'))+'\n\n'+charfilter(post.get('text')))
+                                                wowner, wid = str(post.get('owner_id')), str(post.get('id'))
+                                                printsn('wall'+wowner+'_'+wid+'\n'+name_from_id(post.get('from_id'))+'\n\n'+charfilter(post.get('text')))
                                                 reposted = post.get('copy_history')
                                                 if reposted:
                                                         for reposts in reposted:
@@ -438,12 +439,9 @@ def messaging():
                                                 printsn('____')
                                         if len(wall)==1:
                                                 printsn('COMMENTS:')
-                                                post = wall[0]
-                                                wowner = post.get('from_id')
-                                                wid = post.get('id')
                                                 wallcomments = get_long_list('wall.getComments', {'owner_id': wowner, 'post_id': wid, 'need_likes': 1},INFINITY,W_OFFSET_CONSTANT)
                                                 for comment in wallcomments:
-                                                        printsn('wall'+str(post.get('from_id'))+'_'+str(comment.get('id'))+'\n'+name_from_id(int(comment.get('from_id')))+'\n\n'+charfilter(comment.get('text')))
+                                                        printsn('wall'+wowner+'_'+wid+'?reply='+str(comment.get('id'))+'\n'+name_from_id(comment.get('from_id'))+'\n\n'+charfilter(comment.get('text')))
                                                         print_attachments(comment.get('attachments', []))
                                                         printsn('\n'+str(comment.get('likes').get('count'))+' likes')
                                                         printsn('____')
@@ -452,7 +450,7 @@ def messaging():
                                 elif r(":"):
                                         s = cin()
                                         if s is None: return(0)
-                                        if s.find('http')!=0: s='http://'+s
+                                        if not s.startswith('http'): s='http://'+s
                                         x = requests.get(s)
                                         print(x.text)
                                         return(0)
@@ -547,16 +545,24 @@ def messaging():
                                         s = cin()
                                         if s is None: return(0)
                                         if r("?"):
-                                                print('opens a file from a direct link. Or opens tokenfile, mnemofile, ignorefile, raspyafile - using T,M,I,R commands')
+                                                print('[wget - to download using wget] opens a file from a direct link. Or opens tokenfile, mnemofile, ignorefile, raspyafile - using T,M,I,R commands')
                                                 return(0)
-                                        elif r("t"): os.system(tokenfile)
+                                        owget = r("wget")
+                                        if owget:
+                                                s = cin()
+                                                if s is None: return(0)
+                                        if r("t"): os.system(tokenfile)
                                         elif r("m"): os.system(mnemofile)
                                         elif r("i"): os.system(ignorefile)
                                         elif r("r"): os.system(raspyafile)
                                         else:
                                                 ofname = 'file'+s[s.rfind('.'):]
-                                                with open(ofname, 'wb') as f:
-                                                        f.write(requests.get(s).content)
+                                                if owget:
+                                                        wget_filename = 'opwget.bat'
+                                                        with open(wget_filename, 'w', encoding='utf-8') as wget_file: wget_file.write('chcp 65001\nwget -nc ' + s + ' -O "' + ofname + '"\nDel %0 /q\n')
+                                                        os.system(wget_filename)
+                                                else:
+                                                        with open(ofname, 'wb') as f: f.write(requests.get(s).content)
                                                 os.system(ofname)
                                                 return(0)
                                         start()
@@ -572,6 +578,8 @@ def messaging():
                                 elif r("x"):
                                         s = cin() #get the video from a "player"-link or "player"-link from video id
                                         if s is None: return(0)
+                                        vktrim = s.find('vk.com')
+                                        if vktrim+1: s = s[vktrim+7:]
                                         if s.startswith('doc'):
                                                 r = requests.get('https://vk.com/'+s)
                                                 if not r: return(0)
@@ -603,9 +611,9 @@ def messaging():
                                         else:
                                                 print("photo123123_123123 or audio1231231_12213 or video2123_123123 or http://vk.com/video_ext.php?oid=...")
                                                 return(0)
-                                        if not (s.find('video_ext')+1): return(0)
-                                        x = requests.get(s).text
-                                        if x.find('Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.')+1:
+                                        if 'video_ext' not in s: return(0)
+                                        x = requests.get('https://vk.com/'+s).text
+                                        if 'Видеозапись была помечена модераторами сайта как «Материал для взрослых». Такие видеозаписи запрещено встраивать на внешние сайты.' in x:
                                                 print('Adult content error')
                                                 return(0)
                                         xd = x.find('video_max_hd = ')
@@ -719,7 +727,7 @@ def messaging():
                                         else:
                                                 info = call_api('utils.resolveScreenName', {'screen_name': suserid})
                                                 if info: print(info.get('type'), info.get('object_id'))
-                                        print('Now ' + printtime(time.time()))
+                                        print("now it's " + printtime(time.time())+"\nhttps://vk.com/albums"+str(suserid))
                                         return(0)
                                 elif r("f"):
                                         s = cin()
@@ -811,9 +819,9 @@ def messaging():
                                         s = cin()
                                         if s is None: return(0)
                                         if r("?"):
-                                                print("Deleting messages (e.g. 5123,5124,5653)\nor a wall post (e.g. [https://vk.com/wall]-2424_2123).\Type anything instead 'Y' for the confirmation request and edit the wall post")
+                                                print("deleting messages (e.g. 5123,5124,5653)\nor a wall post (e.g. [[https://vk.com/]wall]-2424_2123).\ntype anything instead 'Y' for the confirmation request and edit the wall post\ntry to delete non-existing post to make an attempt to restore it")
                                                 return(0)
-                                        dwall = s.find('_')+1
+                                        dwall = '_' in s
                                         if dwall:
                                                 wcrop = s.find('wall')
                                                 if wcrop+1: s = s[wcrop+4:]
@@ -953,7 +961,7 @@ def check_inbox():
         prev_token_num = token_num
         for token_num in range(len(token_list)): #if random.random() > prob[token_num]: continue
                 myname = name_from_id(idscache[token_num])
-                viewed_time = lastNviewcache[token_num]
+                viewed_time = lastNviewcache[token_num]# - 2000000
                 notif_resp, resp = None, None
                 tn = token_num<<1
                 if (prob[tn+1]==0 and prob[tn]==0): continue
@@ -994,39 +1002,29 @@ def check_inbox():
                         if respname: printsn('\n'+respname.get('first_name')+' '+respname.get('last_name')+' '+str(uid)+' '+str(N)+' messages')
                         getHistory(N, False, uid)
                         if not looping: printms()
-                if r and t: printsn("-------")
                 for x in nitems:
-                        parent = x.get('parent')
-                        xtype = x.get('type')
-                        if parent is not None:
-                                parent_id = parent.get('to_id')
-                                if parent_id is None:                
-                                      if parent.get('post') is not None:
-                                              parent = parent.get('post')
-                                              parent_id = parent.get('to_id')
-                                      elif parent.get('photo') is not None:
-                                              parent = parent.get('photo')
-                                              parent_id = parent.get('owner_id')
-                                      else: parent_id = parent.get('owner_id')
-                                if 'photo' in xtype: printsn('vk.com/photo'+str(parent_id)+'_'+str(parent.get('id')))
-                                else: printsn('vk.com/wall'+str(parent_id)+'_'+str(parent.get('id')))
-                                printsn(parent.get('text'))
-                                print_attachments(parent.get('attachments', []))
-                        feedback = x.get('feedback')
-                        whos = feedback.get('items')
-                        if whos is not None:
-                                for who in whos:
-                                        whuid = who.get('from_id')
-                                        whuidinfo = getcached(whuid)
-                                        if whuidinfo: printsn(whuidinfo.get('first_name')+' '+whuidinfo.get('last_name')+' '+str(whuid))
-                        comment = feedback.get('text')
-                        if comment is None:
-                                printsn(xtype)
-                        else:
-                                printsn(charfilter(comment))
-                                print_attachments(feedback.get('attachments', []))
+                        xparent, xtype, xdate, xfeedback = x.get('parent'), x.get('type'), x.get('date'), x.get('feedback') #xreply for ur own replies on that
+                        printsn('***\n'+xtype)
+                        if xparent:
+                                xparenttext = xparent.get('text')
+                                prextype = xtype[xtype.rfind('_')+1:]
+                                if 'comment' in prextype: prextype='post'
+                                if 'reply_comment' in xtype or 'like_comment' in xtype:
+                                        comment_id = '?reply='+str(xparent.get('id'))
+                                        xparent = xparent.get(prextype)
+                                else: comment_id=''
+                                xowner = xparent.get('to_id')
+                                if xowner is None: xowner = xparent.get('owner_id')
+                                printsn(prextype.replace('post','wall')+str(xowner)+'_'+str(xparent.get('id'))+comment_id)
+                                if xparenttext: printsn(xparenttext[:140]+'<..>'*int(len(xparenttext)>140)+'\n')
+                        if xfeedback:
+                                xfeedlist = xfeedback.get('items')
+                                if xfeedlist:
+                                        for xid in xfeedlist: printsn(name_from_id(xid.get('from_id')))
+                                xfeedbacktext = xfeedback.get('text')
+                                if xfeedbacktext: printsn('»»\n' + xfeedbacktext)
+                        printsn(printtime(xdate))
                         if not looping: printms()
-                #printsn("_____________")
         token_num = prev_token_num
         return(A) #messages+notifies of all tokens
 def main():
