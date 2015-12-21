@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1445163053 source:c:\users\costansin\desktop\shad\3\main.cpp
+	<iostream>
+	<algorithm>
+	<vector>
+
